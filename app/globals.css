@@ -1,0 +1,189 @@
+:root {
+  --color-bg: #faf6ef;
+  --color-ink: #241c16;
+  --color-ink-soft: #6b5f54;
+  --color-accent: #c1401c;
+  --color-accent-soft: #f3d9c9;
+  --color-herb: #3f6b4a;
+  --color-line: #e4d9c8;
+  --color-card: #ffffff;
+
+  --font-display: var(--font-fraunces), Georgia, serif;
+  --font-body: var(--font-work-sans), system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+}
+
+body {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  border-left: 1px solid var(--color-line);
+  border-right: 1px solid var(--color-line);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  margin: 0;
+}
+
+a {
+  color: inherit;
+}
+
+/* ---------- Header ala kop struk ---------- */
+.receipt-header {
+  padding: 28px 20px 18px;
+  text-align: center;
+  border-bottom: 1px dashed var(--color-line);
+}
+
+.receipt-header .eyebrow {
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--color-accent);
+  font-weight: 600;
+}
+
+.receipt-header h1 {
+  font-size: 28px;
+  margin-top: 6px;
+}
+
+.receipt-header .subtitle {
+  color: var(--color-ink-soft);
+  font-size: 13px;
+  margin-top: 6px;
+}
+
+/* ---------- Kategori menu ---------- */
+.kategori-section {
+  padding: 22px 20px 4px;
+}
+
+.kategori-title {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-ink-soft);
+  margin-bottom: 12px;
+}
+
+/* ---------- Baris menu ala struk: nama ...... harga ---------- */
+.menu-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--color-line);
+  text-align: left;
+  cursor: pointer;
+  font-family: var(--font-body);
+  color: var(--color-ink);
+}
+
+.menu-row:last-child {
+  border-bottom: none;
+}
+
+.menu-row .nama {
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.menu-row .leader {
+  flex: 1;
+  border-bottom: 1px dotted var(--color-line);
+  margin-bottom: 5px;
+}
+
+.menu-row .harga {
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.menu-row .deskripsi {
+  display: block;
+  font-size: 13px;
+  color: var(--color-ink-soft);
+  margin-top: 2px;
+  font-weight: 400;
+}
+
+.menu-row .kolom-nama {
+  display: flex;
+  flex-direction: column;
+}
+
+.badge-habis {
+  display: inline-block;
+  font-size: 11px;
+  color: var(--color-accent);
+  background: var(--color-accent-soft);
+  padding: 2px 8px;
+  border-radius: 999px;
+  margin-left: 8px;
+  font-weight: 600;
+}
+
+/* ---------- Keranjang mengambang ---------- */
+.cart-bar {
+  position: sticky;
+  bottom: 0;
+  margin-top: 24px;
+  padding: 14px 20px;
+  background: var(--color-ink);
+  color: var(--color-bg);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-body);
+}
+
+.cart-bar .cart-total {
+  font-family: var(--font-display);
+  font-size: 17px;
+}
+
+.cart-bar button {
+  background: var(--color-accent);
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+/* ---------- Perforasi pemisah (signature element) ---------- */
+.perforasi {
+  height: 14px;
+  background: repeating-radial-gradient(
+    circle at 0 50%,
+    transparent 0 3px,
+    var(--color-bg) 3px 4px
+  );
+  border-top: 1px dashed var(--color-line);
+  border-bottom: 1px dashed var(--color-line);
+}
