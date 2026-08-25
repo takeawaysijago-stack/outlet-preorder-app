@@ -1,0 +1,10 @@
+{
+  "name": "Pesan & Ambil",
+  "short_name": "Pesan&Ambil",
+  "description": "Pesan dari rumah, tinggal ambil di outlet — tanpa antre.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#faf6ef",
+  "theme_color": "#c1401c",
+  "icons": []
+}
