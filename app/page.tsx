@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import type { MenuItem } from "@/lib/types";
+import LoginGate from "@/components/LoginGate";
 
 // Data contoh sementara — nanti diganti dengan data dari Firestore
 // begitu dashboard admin sudah bisa menyimpan menu.
@@ -51,6 +52,10 @@ function formatRupiah(angka: number) {
 }
 
 export default function HalamanMenu() {
+  return <LoginGate>{() => <IsiMenu />}</LoginGate>;
+}
+
+function IsiMenu() {
   const [keranjang, setKeranjang] = useState<Record<string, number>>({});
 
   const kategoriList = useMemo(() => {
