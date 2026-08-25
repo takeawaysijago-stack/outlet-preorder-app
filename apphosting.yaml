@@ -1,0 +1,9 @@
+# Konfigurasi Firebase App Hosting
+# Dokumentasi: https://firebase.google.com/docs/app-hosting/configure
+
+runConfig:
+  minInstances: 0
+  maxInstances: 1
+
+# Env vars publik Firebase akan ditambahkan lewat Firebase Console
+# (Rollout > Environment variables) supaya tidak perlu ditulis manual di sini.
