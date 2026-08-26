@@ -13,6 +13,13 @@ function formatRupiah(angka: number) {
   }).format(angka);
 }
 
+function ikonKategori(kategori: string) {
+  const k = kategori.toLowerCase();
+  if (k.includes("minum")) return "🥤";
+  if (k.includes("camilan") || k.includes("snack")) return "🍟";
+  return "🍽️";
+}
+
 export default function HalamanMenu() {
   return <LoginGate>{(user) => <IsiMenu namaUser={user.displayName} />}</LoginGate>;
 }
@@ -112,38 +119,45 @@ function IsiMenu({ namaUser }: { namaUser: string | null }) {
                 key={item.id}
                 className={`menu-card ${!item.tersedia ? "habis" : ""}`}
               >
-                <div className="info">
-                  <span className="nama">
-                    {item.nama}
-                    {!item.tersedia && <span className="badge-habis">Habis</span>}
-                  </span>
-                  <span className="harga">{formatRupiah(item.harga)}</span>
-                  {item.deskripsi && (
-                    <span className="deskripsi">{item.deskripsi}</span>
-                  )}
+                <div className="menu-card-top">
+                  <span className="menu-card-label">{item.kategori}</span>
+                  <span className="menu-card-icon">{ikonKategori(item.kategori)}</span>
                 </div>
 
-                {item.tersedia && qty === 0 && (
-                  <button
-                    className="tambah-btn"
-                    onClick={() => ubahQty(item.id, 1)}
-                    aria-label={`Tambah ${item.nama}`}
-                  >
-                    +
-                  </button>
+                <div className="menu-card-value">
+                  {item.nama}
+                  {!item.tersedia && <span className="badge-habis">Habis</span>}
+                </div>
+
+                {item.deskripsi && (
+                  <div className="menu-card-sub">📝 {item.deskripsi}</div>
                 )}
 
-                {item.tersedia && qty > 0 && (
-                  <div className="stepper">
-                    <button onClick={() => ubahQty(item.id, -1)} aria-label="Kurangi">
-                      −
-                    </button>
-                    <span className="qty">{qty}</span>
-                    <button onClick={() => ubahQty(item.id, 1)} aria-label="Tambah">
+                <div className="menu-card-footer">
+                  <span className="menu-card-harga">💰 {formatRupiah(item.harga)}</span>
+
+                  {item.tersedia && qty === 0 && (
+                    <button
+                      className="tambah-btn"
+                      onClick={() => ubahQty(item.id, 1)}
+                      aria-label={`Tambah ${item.nama}`}
+                    >
                       +
                     </button>
-                  </div>
-                )}
+                  )}
+
+                  {item.tersedia && qty > 0 && (
+                    <div className="stepper">
+                      <button onClick={() => ubahQty(item.id, -1)} aria-label="Kurangi">
+                        −
+                      </button>
+                      <span className="qty">{qty}</span>
+                      <button onClick={() => ubahQty(item.id, 1)} aria-label="Tambah">
+                        +
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             );
           })}
