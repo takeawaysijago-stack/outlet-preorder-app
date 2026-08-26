@@ -117,10 +117,10 @@ function IsiMenu({ namaUser }: { namaUser: string | null }) {
                     {item.nama}
                     {!item.tersedia && <span className="badge-habis">Habis</span>}
                   </span>
+                  <span className="harga">{formatRupiah(item.harga)}</span>
                   {item.deskripsi && (
                     <span className="deskripsi">{item.deskripsi}</span>
                   )}
-                  <span className="harga">{formatRupiah(item.harga)}</span>
                 </div>
 
                 {item.tersedia && qty === 0 && (
