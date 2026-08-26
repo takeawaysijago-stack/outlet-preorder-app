@@ -64,10 +64,8 @@ function IsiMenu({ namaUser }: { namaUser: string | null }) {
       <header className="app-header">
         <div className="header-brand-row">
           <img src="/logo.png" alt="Geprek Si Jago" className="brand-logo-kecil" />
-          <div className="eyebrow">Halo, {namaUser?.split(" ")[0] ?? "Customer"} 👋</div>
+          <h1>Halo, {namaUser?.split(" ")[0] ?? "Customer"}</h1>
         </div>
-        <h1 style={{ marginTop: 10 }}>Mau pesan apa hari ini?</h1>
-        <p className="subtitle">Pesan sekarang, tentukan jam ambil, tanpa antre.</p>
       </header>
 
       <nav className="kategori-tabs">
