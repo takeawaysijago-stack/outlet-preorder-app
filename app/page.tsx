@@ -129,13 +129,16 @@ function IsiMenu({ namaUser }: { namaUser: string | null }) {
                   {!item.tersedia && <span className="badge-habis">Habis</span>}
                 </div>
 
+                <div className="menu-card-harga-besar">{formatRupiah(item.harga)}</div>
+
                 {item.deskripsi && (
-                  <div className="menu-card-sub">📝 {item.deskripsi}</div>
+                  <>
+                    <div className="menu-card-divider" />
+                    <div className="menu-card-sub">📝 {item.deskripsi}</div>
+                  </>
                 )}
 
                 <div className="menu-card-footer">
-                  <span className="menu-card-harga">💰 {formatRupiah(item.harga)}</span>
-
                   {item.tersedia && qty === 0 && (
                     <button
                       className="tambah-btn"
