@@ -1,7 +1,7 @@
 export default function HalamanAdmin() {
   return (
     <main>
-      <header className="receipt-header">
+      <header className="app-header">
         <div className="eyebrow">Khusus staf</div>
         <h1>Dashboard Kasir</h1>
         <p className="subtitle">
