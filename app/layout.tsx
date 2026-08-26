@@ -1,17 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Work_Sans } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 
-const fraunces = Fraunces({
+const jakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  variable: "--font-fraunces",
-  weight: ["500", "600", "700"],
-});
-
-const workSans = Work_Sans({
-  subsets: ["latin"],
-  variable: "--font-work-sans",
-  weight: ["400", "500", "600"],
+  variable: "--font-jakarta",
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
@@ -21,7 +15,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#c1401c",
+  themeColor: "#d1451f",
   width: "device-width",
   initialScale: 1,
 };
@@ -33,9 +27,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="id">
-      <body className={`${fraunces.variable} ${workSans.variable}`}>
-        {children}
-      </body>
+      <body className={jakarta.variable}>{children}</body>
     </html>
   );
 }
