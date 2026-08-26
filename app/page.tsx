@@ -1,47 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { MenuItem } from "@/lib/types";
 import LoginGate from "@/components/LoginGate";
-
-// Data contoh sementara — nanti diganti dengan data dari Firestore
-// begitu dashboard admin sudah bisa menyimpan menu.
-const CONTOH_MENU: MenuItem[] = [
-  {
-    id: "1",
-    nama: "Nasi Ayam Geprek",
-    deskripsi: "Ayam goreng tepung, sambal bawang, lalapan",
-    harga: 22000,
-    kategori: "Makanan Utama",
-    tersedia: true,
-    addOnGroups: [],
-  },
-  {
-    id: "2",
-    nama: "Mie Goreng Spesial",
-    deskripsi: "Mie goreng telur, bakso, sosis",
-    harga: 20000,
-    kategori: "Makanan Utama",
-    tersedia: true,
-    addOnGroups: [],
-  },
-  {
-    id: "3",
-    nama: "Es Teh Manis",
-    harga: 6000,
-    kategori: "Minuman",
-    tersedia: true,
-    addOnGroups: [],
-  },
-  {
-    id: "4",
-    nama: "Es Jeruk",
-    harga: 8000,
-    kategori: "Minuman",
-    tersedia: false,
-    addOnGroups: [],
-  },
-];
+import { dengarkanMenu } from "@/lib/menuService";
 
 function formatRupiah(angka: number) {
   return new Intl.NumberFormat("id-ID", {
@@ -56,13 +18,23 @@ export default function HalamanMenu() {
 }
 
 function IsiMenu({ namaUser }: { namaUser: string | null }) {
+  const [daftarMenu, setDaftarMenu] = useState<MenuItem[]>([]);
+  const [memuat, setMemuat] = useState(true);
   const [keranjang, setKeranjang] = useState<Record<string, number>>({});
   const [kategoriAktif, setKategoriAktif] = useState<string | null>(null);
 
-  const kategoriList = useMemo(() => {
-    const set = new Set(CONTOH_MENU.map((m) => m.kategori));
-    return Array.from(set);
+  useEffect(() => {
+    const unsubscribe = dengarkanMenu((items) => {
+      setDaftarMenu(items);
+      setMemuat(false);
+    });
+    return () => unsubscribe();
   }, []);
+
+  const kategoriList = useMemo(() => {
+    const set = new Set(daftarMenu.map((m) => m.kategori));
+    return Array.from(set);
+  }, [daftarMenu]);
 
   const kategoriTampil = kategoriAktif
     ? [kategoriAktif]
@@ -70,7 +42,7 @@ function IsiMenu({ namaUser }: { namaUser: string | null }) {
 
   const totalItem = Object.values(keranjang).reduce((a, b) => a + b, 0);
   const totalHarga = Object.entries(keranjang).reduce((sum, [id, qty]) => {
-    const item = CONTOH_MENU.find((m) => m.id === id);
+    const item = daftarMenu.find((m) => m.id === id);
     return sum + (item ? item.harga * qty : 0);
   }, 0);
 
@@ -113,10 +85,26 @@ function IsiMenu({ namaUser }: { namaUser: string | null }) {
         ))}
       </nav>
 
+      {memuat && (
+        <div className="kategori-section">
+          <p style={{ color: "var(--color-ink-soft)" }}>Memuat menu…</p>
+        </div>
+      )}
+
+      {!memuat && daftarMenu.length === 0 && (
+        <div className="kategori-section">
+          <p style={{ color: "var(--color-ink-soft)" }}>
+            Menu belum tersedia. Silakan cek lagi nanti.
+          </p>
+        </div>
+      )}
+
       {kategoriTampil.map((kategori) => (
         <section key={kategori} className="kategori-section">
           <div className="kategori-title">{kategori}</div>
-          {CONTOH_MENU.filter((m) => m.kategori === kategori).map((item) => {
+          {daftarMenu
+            .filter((m) => m.kategori === kategori)
+            .map((item) => {
             const qty = keranjang[item.id] ?? 0;
             return (
               <div
