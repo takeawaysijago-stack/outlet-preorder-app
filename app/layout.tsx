@@ -9,13 +9,13 @@ const jakarta = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Pesan & Ambil",
+  title: "Geprek Si Jago",
   description: "Pesan dari rumah, tinggal ambil di outlet — tanpa antre.",
   manifest: "/manifest.json",
 };
 
 export const viewport: Viewport = {
-  themeColor: "#d1451f",
+  themeColor: "#f2b705",
   width: "device-width",
   initialScale: 1,
 };
