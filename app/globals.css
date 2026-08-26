@@ -1,5 +1,5 @@
 :root {
-  --color-bg: #f2b705;
+  --color-bg: #d9a62a;
   --color-ink: #171310;
   --color-ink-soft: #6b5f43;
   --color-accent: #d7263d;
@@ -146,17 +146,19 @@ button { font-family: var(--font-sans); }
   gap: 8px;
 }
 
-.menu-card .deskripsi {
-  font-size: 13px;
-  color: var(--color-ink-soft);
-  line-height: 1.4;
-}
-
 .menu-card .harga {
   font-size: 14.5px;
   font-weight: 600;
   color: var(--color-ink);
-  margin-top: 2px;
+}
+
+.menu-card .deskripsi {
+  font-size: 13px;
+  color: var(--color-ink-soft);
+  line-height: 1.4;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--color-line);
 }
 
 .badge-habis {
