@@ -52,16 +52,21 @@ function formatRupiah(angka: number) {
 }
 
 export default function HalamanMenu() {
-  return <LoginGate>{() => <IsiMenu />}</LoginGate>;
+  return <LoginGate>{(user) => <IsiMenu namaUser={user.displayName} />}</LoginGate>;
 }
 
-function IsiMenu() {
+function IsiMenu({ namaUser }: { namaUser: string | null }) {
   const [keranjang, setKeranjang] = useState<Record<string, number>>({});
+  const [kategoriAktif, setKategoriAktif] = useState<string | null>(null);
 
   const kategoriList = useMemo(() => {
     const set = new Set(CONTOH_MENU.map((m) => m.kategori));
     return Array.from(set);
   }, []);
+
+  const kategoriTampil = kategoriAktif
+    ? [kategoriAktif]
+    : kategoriList;
 
   const totalItem = Object.values(keranjang).reduce((a, b) => a + b, 0);
   const totalHarga = Object.entries(keranjang).reduce((sum, [id, qty]) => {
@@ -69,60 +74,102 @@ function IsiMenu() {
     return sum + (item ? item.harga * qty : 0);
   }, 0);
 
-  function tambahKeKeranjang(id: string) {
-    setKeranjang((prev) => ({ ...prev, [id]: (prev[id] ?? 0) + 1 }));
+  function ubahQty(id: string, delta: number) {
+    setKeranjang((prev) => {
+      const qtyBaru = (prev[id] ?? 0) + delta;
+      const next = { ...prev };
+      if (qtyBaru <= 0) {
+        delete next[id];
+      } else {
+        next[id] = qtyBaru;
+      }
+      return next;
+    });
   }
 
   return (
     <main>
-      <header className="receipt-header">
-        <div className="eyebrow">Pesan sekarang, ambil tanpa antre</div>
-        <h1>Menu Hari Ini</h1>
-        <p className="subtitle">
-          Pilih menu, tentukan jam ambil, dan bayar dari mana saja.
-        </p>
+      <header className="app-header">
+        <div className="eyebrow">Halo, {namaUser?.split(" ")[0] ?? "Customer"} 👋</div>
+        <h1>Mau pesan apa hari ini?</h1>
+        <p className="subtitle">Pesan sekarang, tentukan jam ambil, tanpa antre.</p>
       </header>
 
-      {kategoriList.map((kategori, idx) => (
-        <div key={kategori}>
-          {idx > 0 && <div className="perforasi" />}
-          <section className="kategori-section">
-            <div className="kategori-title">{kategori}</div>
-            {CONTOH_MENU.filter((m) => m.kategori === kategori).map(
-              (item) => (
-                <button
-                  key={item.id}
-                  className="menu-row"
-                  disabled={!item.tersedia}
-                  onClick={() => tambahKeKeranjang(item.id)}
-                  style={{ opacity: item.tersedia ? 1 : 0.5 }}
-                >
-                  <span className="kolom-nama">
-                    <span className="nama">
-                      {item.nama}
-                      {!item.tersedia && (
-                        <span className="badge-habis">Habis</span>
-                      )}
-                    </span>
-                    {item.deskripsi && (
-                      <span className="deskripsi">{item.deskripsi}</span>
-                    )}
+      <nav className="kategori-tabs">
+        <button
+          className={`kategori-chip ${kategoriAktif === null ? "aktif" : ""}`}
+          onClick={() => setKategoriAktif(null)}
+        >
+          Semua
+        </button>
+        {kategoriList.map((kategori) => (
+          <button
+            key={kategori}
+            className={`kategori-chip ${kategoriAktif === kategori ? "aktif" : ""}`}
+            onClick={() => setKategoriAktif(kategori)}
+          >
+            {kategori}
+          </button>
+        ))}
+      </nav>
+
+      {kategoriTampil.map((kategori) => (
+        <section key={kategori} className="kategori-section">
+          <div className="kategori-title">{kategori}</div>
+          {CONTOH_MENU.filter((m) => m.kategori === kategori).map((item) => {
+            const qty = keranjang[item.id] ?? 0;
+            return (
+              <div
+                key={item.id}
+                className={`menu-card ${!item.tersedia ? "habis" : ""}`}
+              >
+                <div className="info">
+                  <span className="nama">
+                    {item.nama}
+                    {!item.tersedia && <span className="badge-habis">Habis</span>}
                   </span>
-                  <span className="leader" />
+                  {item.deskripsi && (
+                    <span className="deskripsi">{item.deskripsi}</span>
+                  )}
                   <span className="harga">{formatRupiah(item.harga)}</span>
-                </button>
-              )
-            )}
-          </section>
-        </div>
+                </div>
+
+                {item.tersedia && qty === 0 && (
+                  <button
+                    className="tambah-btn"
+                    onClick={() => ubahQty(item.id, 1)}
+                    aria-label={`Tambah ${item.nama}`}
+                  >
+                    +
+                  </button>
+                )}
+
+                {item.tersedia && qty > 0 && (
+                  <div className="stepper">
+                    <button onClick={() => ubahQty(item.id, -1)} aria-label="Kurangi">
+                      −
+                    </button>
+                    <span className="qty">{qty}</span>
+                    <button onClick={() => ubahQty(item.id, 1)} aria-label="Tambah">
+                      +
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </section>
       ))}
 
       {totalItem > 0 && (
-        <div className="cart-bar">
-          <span className="cart-total">
-            {totalItem} item · {formatRupiah(totalHarga)}
-          </span>
-          <button>Lihat Keranjang</button>
+        <div className="cart-float-wrap">
+          <div className="cart-float">
+            <span className="cart-total">
+              {totalItem} item
+              <small>{formatRupiah(totalHarga)}</small>
+            </span>
+            <button>Lihat Keranjang</button>
+          </div>
         </div>
       )}
     </main>
