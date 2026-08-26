@@ -1,11 +1,11 @@
 :root {
-  --color-bg: #d9a62a;
-  --color-ink: #171310;
-  --color-ink-soft: #6b5f43;
-  --color-accent: #d7263d;
-  --color-accent-soft: #fbe1e4;
+  --color-bg: #fec92f;
+  --color-ink: #000000;
+  --color-ink-soft: #5c4a1f;
+  --color-accent: #e70024;
+  --color-accent-soft: #fbdadf;
   --color-card: #ffffff;
-  --color-line: #f1e6bd;
+  --color-line: #f5dfa0;
 
   --font-sans: var(--font-jakarta), system-ui, sans-serif;
 
