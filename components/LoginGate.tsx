@@ -50,7 +50,8 @@ export default function LoginGate({
   if (!user) {
     return (
       <main>
-        <header className="app-header">
+        <img src="/logo.png" alt="Geprek Si Jago" className="brand-logo" />
+        <header className="app-header" style={{ textAlign: "center", paddingTop: 10 }}>
           <div className="eyebrow">Pesan sekarang, ambil tanpa antre</div>
           <h1>Selamat Datang</h1>
           <p className="subtitle">
