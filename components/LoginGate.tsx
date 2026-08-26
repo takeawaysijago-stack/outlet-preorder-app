@@ -50,28 +50,15 @@ export default function LoginGate({
   if (!user) {
     return (
       <main>
-        <header className="receipt-header">
+        <header className="app-header">
           <div className="eyebrow">Pesan sekarang, ambil tanpa antre</div>
           <h1>Selamat Datang</h1>
           <p className="subtitle">
             Masuk dengan akun Google untuk mulai memesan.
           </p>
         </header>
-        <div className="kategori-section" style={{ textAlign: "center" }}>
-          <button
-            onClick={masukDenganGoogle}
-            style={{
-              background: "var(--color-accent)",
-              color: "white",
-              border: "none",
-              padding: "12px 22px",
-              borderRadius: 8,
-              fontWeight: 600,
-              fontSize: 15,
-              cursor: "pointer",
-              fontFamily: "var(--font-body)",
-            }}
-          >
+        <div className="kategori-section" style={{ textAlign: "center", marginTop: 24 }}>
+          <button onClick={masukDenganGoogle} className="tambah-btn-lebar">
             Masuk dengan Google
           </button>
           {error && (
@@ -86,30 +73,9 @@ export default function LoginGate({
 
   return (
     <>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          padding: "10px 20px",
-          fontSize: 13,
-          color: "var(--color-ink-soft)",
-          borderBottom: "1px solid var(--color-line)",
-        }}
-      >
+      <div className="top-bar">
         <span>Halo, {user.displayName?.split(" ")[0] ?? "Customer"}</span>
-        <button
-          onClick={() => signOut(auth)}
-          style={{
-            background: "none",
-            border: "none",
-            color: "var(--color-accent)",
-            fontWeight: 600,
-            cursor: "pointer",
-            fontFamily: "var(--font-body)",
-            fontSize: 13,
-          }}
-        >
+        <button className="keluar-btn" onClick={() => signOut(auth)}>
           Keluar
         </button>
       </div>
