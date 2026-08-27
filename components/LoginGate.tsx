@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import {
   GoogleAuthProvider,
+  getRedirectResult,
   onAuthStateChanged,
-  signInWithPopup,
+  signInWithRedirect,
   signOut,
   type User,
 } from "firebase/auth";
@@ -20,6 +21,11 @@ export default function LoginGate({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Tangkap hasil login setelah redirect balik dari Google
+    getRedirectResult(auth).catch(() => {
+      setError("Gagal masuk. Coba lagi sebentar.");
+    });
+
     const unsubscribe = onAuthStateChanged(auth, (u) => {
       setUser(u);
       setMemuat(false);
@@ -31,7 +37,7 @@ export default function LoginGate({
     setError(null);
     try {
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
+      await signInWithRedirect(auth, provider);
     } catch (e) {
       setError("Gagal masuk. Coba lagi sebentar.");
     }
