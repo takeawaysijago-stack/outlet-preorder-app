@@ -1,15 +1,45 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   GoogleAuthProvider,
-  getRedirectResult,
   onAuthStateChanged,
-  signInWithRedirect,
+  signInWithCredential,
   signOut,
   type User,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
+
+declare global {
+  interface Window {
+    google?: {
+      accounts: {
+        id: {
+          initialize: (config: {
+            client_id: string;
+            callback: (response: { credential: string }) => void;
+          }) => void;
+          renderButton: (
+            parent: HTMLElement,
+            options: Record<string, unknown>
+          ) => void;
+        };
+      };
+    };
+  }
+}
+
+function loadGsiScript(): Promise<void> {
+  return new Promise((resolve) => {
+    if (typeof window === "undefined") return resolve();
+    if (window.google?.accounts?.id) return resolve();
+    const script = document.createElement("script");
+    script.src = "https://accounts.google.com/gsi/client";
+    script.async = true;
+    script.onload = () => resolve();
+    document.body.appendChild(script);
+  });
+}
 
 export default function LoginGate({
   children,
@@ -19,13 +49,9 @@ export default function LoginGate({
   const [user, setUser] = useState<User | null>(null);
   const [memuat, setMemuat] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const tombolRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    // Tangkap hasil login setelah redirect balik dari Google
-    getRedirectResult(auth).catch(() => {
-      setError("Gagal masuk. Coba lagi sebentar.");
-    });
-
     const unsubscribe = onAuthStateChanged(auth, (u) => {
       setUser(u);
       setMemuat(false);
@@ -33,15 +59,33 @@ export default function LoginGate({
     return () => unsubscribe();
   }, []);
 
-  async function masukDenganGoogle() {
-    setError(null);
-    try {
-      const provider = new GoogleAuthProvider();
-      await signInWithRedirect(auth, provider);
-    } catch (e) {
-      setError("Gagal masuk. Coba lagi sebentar.");
-    }
-  }
+  useEffect(() => {
+    if (memuat || user) return;
+
+    loadGsiScript().then(() => {
+      if (!window.google || !tombolRef.current) return;
+
+      window.google.accounts.id.initialize({
+        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "",
+        callback: async (response) => {
+          try {
+            const credential = GoogleAuthProvider.credential(response.credential);
+            await signInWithCredential(auth, credential);
+          } catch (e) {
+            setError("Gagal masuk. Coba lagi sebentar.");
+          }
+        },
+      });
+
+      window.google.accounts.id.renderButton(tombolRef.current, {
+        theme: "filled_black",
+        size: "large",
+        shape: "pill",
+        text: "continue_with",
+        width: 280,
+      });
+    });
+  }, [memuat, user]);
 
   if (memuat) {
     return (
@@ -62,9 +106,7 @@ export default function LoginGate({
           <p className="subtitle">Masuk untuk mulai memesan.</p>
         </header>
         <div className="kategori-section" style={{ textAlign: "center", marginTop: 24 }}>
-          <button onClick={masukDenganGoogle} className="tambah-btn-lebar">
-            Masuk dengan Google
-          </button>
+          <div ref={tombolRef} style={{ display: "flex", justifyContent: "center" }} />
           {error && (
             <p style={{ color: "var(--color-accent)", fontSize: 13, marginTop: 12 }}>
               {error}
