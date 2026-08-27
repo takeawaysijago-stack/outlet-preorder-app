@@ -11,6 +11,8 @@ export async function POST(req: Request) {
       items: OrderItem[];
       total: number;
       namaCustomer: string | null;
+      metode: "qris" | "va";
+      biayaAdmin: number;
     };
 
     const serverKey = process.env.MIDTRANS_SERVER_KEY;
@@ -35,24 +37,34 @@ export async function POST(req: Request) {
       name: it.namaMenu.slice(0, 50),
     }));
 
+    // Biaya admin ditambahkan sebagai baris item terpisah, supaya totalnya
+    // (gross_amount) cocok dengan jumlah semua item_details -- ini wajib
+    // sesuai aturan Midtrans.
+    itemDetails.push({
+      id: "biaya-admin",
+      price: body.biayaAdmin,
+      quantity: 1,
+      name: "Biaya Admin Pembayaran",
+    });
+
+    const grossAmount = body.total + body.biayaAdmin;
+
+    const enabledPayments =
+      body.metode === "qris"
+        ? ["qris"]
+        : ["bca_va", "bni_va", "bri_va", "permata_va", "other_va"];
+
     const payload = {
       transaction_details: {
         order_id: body.orderId,
-        gross_amount: body.total,
+        gross_amount: grossAmount,
       },
+      language: "id",
       item_details: itemDetails,
       customer_details: {
         first_name: body.namaCustomer || "Customer",
       },
-      // Batasi metode pembayaran cuma QRIS & Virtual Account, sesuai kebutuhan
-      enabled_payments: [
-        "qris",
-        "bca_va",
-        "bni_va",
-        "bri_va",
-        "permata_va",
-        "other_va",
-      ],
+      enabled_payments: enabledPayments,
     };
 
     const res = await fetch(`${baseUrl}/snap/v1/transactions`, {
