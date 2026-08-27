@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import type { AddOnGroup, AddOnOption, MenuItem } from "@/lib/types";
 import { dengarkanMenu, tambahMenu, updateMenu, hapusMenu } from "@/lib/menuService";
+import { dengarkanPengaturan, simpanPengaturan } from "@/lib/settingsService";
+import type { OperationalHours } from "@/lib/types";
 
 function formatRupiah(angka: number) {
   return new Intl.NumberFormat("id-ID", {
@@ -28,6 +30,36 @@ export default function HalamanAdmin() {
   const [editId, setEditId] = useState<string | null>(null);
   const [menyimpan, setMenyimpan] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [jamOps, setJamOps] = useState<OperationalHours>({
+    jamMulaiPesan: "09:00",
+    jamBuka: "12:00",
+    defaultMenitPenyiapan: 15,
+  });
+  const [menyimpanJam, setMenyimpanJam] = useState(false);
+
+  useEffect(() => {
+    return dengarkanPengaturan(setJamOps);
+  }, []);
+
+  async function simpanJamOps() {
+    setMenyimpanJam(true);
+    try {
+      await simpanPengaturan(jamOps);
+    } finally {
+      setMenyimpanJam(false);
+    }
+  }
+
+  async function toggleTersedia(item: MenuItem) {
+    await updateMenu(item.id, {
+      nama: item.nama,
+      deskripsi: item.deskripsi,
+      harga: item.harga,
+      kategori: item.kategori,
+      tersedia: !item.tersedia,
+      addOnGroups: item.addOnGroups,
+    });
+  }
 
   useEffect(() => {
     const unsubscribe = dengarkanMenu((items) => {
@@ -161,6 +193,76 @@ export default function HalamanAdmin() {
           Tambah, ubah, atau hapus menu dan add-on-nya di sini.
         </p>
       </header>
+
+      <section className="kategori-section">
+        <div
+          style={{
+            background: "var(--color-card)",
+            borderRadius: "var(--radius-lg)",
+            padding: 16,
+            boxShadow: "var(--shadow-card)",
+            display: "flex",
+            flexDirection: "column",
+            gap: 10,
+          }}
+        >
+          <strong>Jam Operasional</strong>
+
+          <label style={{ fontSize: 13, color: "var(--color-ink-soft)" }}>
+            Mulai bisa pesan (pre-order)
+            <input
+              type="time"
+              value={jamOps.jamMulaiPesan}
+              onChange={(e) =>
+                setJamOps((j) => ({ ...j, jamMulaiPesan: e.target.value }))
+              }
+              style={{ ...inputStyle, marginTop: 4 }}
+            />
+          </label>
+
+          <label style={{ fontSize: 13, color: "var(--color-ink-soft)" }}>
+            Jam buka outlet (pesanan mulai bisa diambil)
+            <input
+              type="time"
+              value={jamOps.jamBuka}
+              onChange={(e) =>
+                setJamOps((j) => ({ ...j, jamBuka: e.target.value }))
+              }
+              style={{ ...inputStyle, marginTop: 4 }}
+            />
+          </label>
+
+          <label style={{ fontSize: 13, color: "var(--color-ink-soft)" }}>
+            Default waktu siap (menit setelah pesan)
+            <input
+              type="number"
+              min={5}
+              value={jamOps.defaultMenitPenyiapan}
+              onChange={(e) =>
+                setJamOps((j) => ({
+                  ...j,
+                  defaultMenitPenyiapan: Number(e.target.value) || 15,
+                }))
+              }
+              style={{ ...inputStyle, marginTop: 4 }}
+            />
+          </label>
+
+          <p style={{ fontSize: 12, color: "var(--color-ink-soft)", margin: 0 }}>
+            Contoh: kalau customer pesan jam 10:00, dan default waktu siap 15
+            menit, tapi outlet baru buka jam 12:00 — jam ambil otomatis
+            disarankan jam 12:00 (bukan 10:15), karena outlet belum buka.
+          </p>
+
+          <button
+            className="tambah-btn-lebar"
+            onClick={simpanJamOps}
+            disabled={menyimpanJam}
+          >
+            {menyimpanJam ? "Menyimpan…" : "Simpan Jam Operasional"}
+          </button>
+        </div>
+      </section>
 
       <section className="kategori-section">
         <form
@@ -329,21 +431,38 @@ export default function HalamanAdmin() {
         {memuat && <p style={{ color: "var(--color-ink-soft)" }}>Memuat…</p>}
         {daftarMenu.map((item) => (
           <div key={item.id} className={`menu-card ${!item.tersedia ? "habis" : ""}`}>
-            <div className="info">
-              <span className="nama">
-                {item.nama}
-                {!item.tersedia && <span className="badge-habis">Tidak tampil</span>}
-              </span>
-              <span className="deskripsi">{item.kategori}</span>
-              <span className="harga">{formatRupiah(item.harga)}</span>
-            </div>
-            <div style={{ display: "flex", gap: 6 }}>
-              <button onClick={() => mulaiEdit(item)} style={linkBtnStyle}>
-                Edit
-              </button>
-              <button onClick={() => hapusItem(item.id)} style={linkBtnStyle}>
-                Hapus
-              </button>
+            <div className="menu-card-value">{item.nama}</div>
+            <div className="menu-card-harga-besar">{formatRupiah(item.harga)}</div>
+            <div className="menu-card-divider" />
+            <div className="menu-card-sub">{item.kategori}</div>
+
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginTop: 12,
+              }}
+            >
+              <label style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13 }}>
+                <span className="toggle-switch">
+                  <input
+                    type="checkbox"
+                    checked={item.tersedia}
+                    onChange={() => toggleTersedia(item)}
+                  />
+                  <span className="toggle-slider" />
+                </span>
+                {item.tersedia ? "Tersedia" : "Nonaktif"}
+              </label>
+              <div style={{ display: "flex", gap: 10 }}>
+                <button onClick={() => mulaiEdit(item)} style={linkBtnStyle}>
+                  Edit
+                </button>
+                <button onClick={() => hapusItem(item.id)} style={linkBtnStyle}>
+                  Hapus
+                </button>
+              </div>
             </div>
           </div>
         ))}
