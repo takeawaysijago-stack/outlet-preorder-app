@@ -14,6 +14,7 @@ import {
 } from "@/lib/cart";
 import { buatPesanan, updateStatusPesanan } from "@/lib/orderService";
 import { loadSnapScript } from "@/lib/loadSnap";
+import { hitungBiayaAdmin, labelMetode, type MetodeBayar } from "@/lib/biayaAdmin";
 import type { OrderItem } from "@/lib/types";
 
 function formatRupiah(angka: number) {
@@ -53,6 +54,7 @@ function IsiKeranjang({ user }: { user: { uid: string; displayName: string | nul
   const router = useRouter();
   const [lines, setLines] = useState<CartLine[]>([]);
   const [jamAmbil, setJamAmbil] = useState("");
+  const [metode, setMetode] = useState<MetodeBayar>("qris");
   const [mengirim, setMengirim] = useState(false);
   const [sukses, setSukses] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -71,7 +73,9 @@ function IsiKeranjang({ user }: { user: { uid: string; displayName: string | nul
     if (!jamAmbil && slotJam.length > 0) setJamAmbil(slotJam[0].iso);
   }, [slotJam, jamAmbil]);
 
-  const total = lines.reduce((s, l) => s + hitungHargaLine(l), 0);
+  const subtotal = lines.reduce((s, l) => s + hitungHargaLine(l), 0);
+  const biayaAdmin = hitungBiayaAdmin(metode, subtotal);
+  const total = subtotal + biayaAdmin;
 
   async function konfirmasiPesanan() {
     if (lines.length === 0 || !jamAmbil) return;
@@ -102,6 +106,8 @@ function IsiKeranjang({ user }: { user: { uid: string; displayName: string | nul
         items,
         totalHarga: total,
         jamAmbil,
+        metodePembayaran: metode === "qris" ? "qris" : "virtual_account",
+        biayaAdmin,
       });
 
       // Minta token pembayaran ke server (server yang hubungi Midtrans)
@@ -111,7 +117,9 @@ function IsiKeranjang({ user }: { user: { uid: string; displayName: string | nul
         body: JSON.stringify({
           orderId,
           items,
-          total,
+          total: subtotal,
+          biayaAdmin,
+          metode,
           namaCustomer: user.displayName,
         }),
       });
@@ -240,8 +248,42 @@ function IsiKeranjang({ user }: { user: { uid: string; displayName: string | nul
 
         {lines.length > 0 && (
           <>
+            <div className="modal-group-title" style={{ marginTop: 20 }}>
+              Metode Pembayaran
+            </div>
+            {(["qris", "va"] as MetodeBayar[]).map((m) => (
+              <label
+                key={m}
+                className={`modal-opsi ${metode === m ? "dipilih" : ""}`}
+              >
+                <span>
+                  {labelMetode(m)}
+                  <br />
+                  <small style={{ color: "var(--color-ink-soft)", fontWeight: 400 }}>
+                    Biaya admin: {formatRupiah(hitungBiayaAdmin(m, subtotal))}
+                  </small>
+                </span>
+                <input
+                  type="radio"
+                  checked={metode === m}
+                  onChange={() => setMetode(m)}
+                />
+              </label>
+            ))}
+
+            <div style={{ marginTop: 14, fontSize: 13.5 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
+                <span style={{ color: "var(--color-ink-soft)" }}>Subtotal</span>
+                <span>{formatRupiah(subtotal)}</span>
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between" }}>
+                <span style={{ color: "var(--color-ink-soft)" }}>Biaya admin</span>
+                <span>{formatRupiah(biayaAdmin)}</span>
+              </div>
+            </div>
+
             <div className="cart-total-row">
-              <span>Total</span>
+              <span>Total Bayar</span>
               <span>{formatRupiah(total)}</span>
             </div>
 
