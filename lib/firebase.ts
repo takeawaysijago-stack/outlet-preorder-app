@@ -4,7 +4,7 @@
 // Firebase Console > Project Settings > General > Your apps > SDK setup and config
 
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { initializeFirestore, getFirestore } from "firebase/firestore";
+import { initializeFirestore, getFirestore, type Firestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
@@ -22,7 +22,7 @@ const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 // ignoreUndefinedProperties: true -> field yang nilainya undefined (misal
 // catatan yang tidak diisi customer) otomatis diabaikan, tidak bikin error.
 // Kalau sudah pernah diinisialisasi sebelumnya (hot-reload), pakai getFirestore biasa.
-let db;
+let db: Firestore;
 try {
   db = initializeFirestore(app, { ignoreUndefinedProperties: true });
 } catch {
