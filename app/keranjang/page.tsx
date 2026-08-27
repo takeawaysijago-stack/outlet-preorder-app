@@ -12,7 +12,8 @@ import {
   updateQtyKeranjang,
   type CartLine,
 } from "@/lib/cart";
-import { buatPesanan } from "@/lib/orderService";
+import { buatPesanan, updateStatusPesanan } from "@/lib/orderService";
+import { loadSnapScript } from "@/lib/loadSnap";
 import type { OrderItem } from "@/lib/types";
 
 function formatRupiah(angka: number) {
@@ -103,11 +104,51 @@ function IsiKeranjang({ user }: { user: { uid: string; displayName: string | nul
         jamAmbil,
       });
 
-      kosongkanKeranjang();
-      setSukses(orderId);
+      // Minta token pembayaran ke server (server yang hubungi Midtrans)
+      const res = await fetch("/api/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId,
+          items,
+          total,
+          namaCustomer: user.displayName,
+        }),
+      });
+      const data = await res.json();
+
+      if (!res.ok || !data.token) {
+        setError("Gagal menyiapkan pembayaran. Pesanan tetap tersimpan, coba lagi.");
+        setMengirim(false);
+        return;
+      }
+
+      await loadSnapScript();
+
+      window.snap?.pay(data.token, {
+        onSuccess: async () => {
+          await updateStatusPesanan(orderId, "dibayar");
+          kosongkanKeranjang();
+          setSukses(orderId);
+        },
+        onPending: async () => {
+          // Untuk VA: pembayaran belum masuk, customer masih perlu transfer.
+          kosongkanKeranjang();
+          setSukses(orderId);
+        },
+        onError: () => {
+          setError("Pembayaran gagal. Silakan coba lagi.");
+          setMengirim(false);
+        },
+        onClose: () => {
+          setError(
+            "Pop-up ditutup sebelum pembayaran selesai. Pesanan tetap tersimpan, buka kembali dari riwayat untuk lanjut bayar."
+          );
+          setMengirim(false);
+        },
+      });
     } catch (e) {
       setError("Gagal membuat pesanan. Coba lagi.");
-    } finally {
       setMengirim(false);
     }
   }
@@ -123,8 +164,9 @@ function IsiKeranjang({ user }: { user: { uid: string; displayName: string | nul
         </header>
         <section className="kategori-section">
           <p style={{ color: "var(--color-ink-soft)", fontSize: 13.5 }}>
-            Pembayaran online belum aktif — untuk sekarang, pesanan berstatus
-            &quot;menunggu pembayaran&quot;. Silakan konfirmasi ke outlet.
+            Kalau kamu bayar pakai Virtual Account, selesaikan transfer sesuai
+            nomor VA yang muncul di pop-up tadi. Kalau QRIS, pesanan langsung
+            diproses begitu pembayaran terkonfirmasi.
           </p>
           <button
             className="checkout-submit"
