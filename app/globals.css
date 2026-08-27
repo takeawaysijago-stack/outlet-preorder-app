@@ -305,7 +305,11 @@ button { font-family: var(--font-sans); }
   color: rgba(255, 255, 255, 0.6);
 }
 
-.cart-float button {
+.cart-float {
+  text-decoration: none;
+}
+
+.cart-float > span:last-child {
   background: var(--color-accent);
   color: white;
   border: none;
@@ -368,4 +372,201 @@ button { font-family: var(--font-sans); }
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+/* ---------- Modal pilih add-on ---------- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 50;
+}
+
+.modal-sheet {
+  background: var(--color-card);
+  width: 100%;
+  max-width: 480px;
+  border-radius: 20px 20px 0 0;
+  padding: 20px 20px 24px;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+
+.modal-handle {
+  width: 40px;
+  height: 4px;
+  background: var(--color-line);
+  border-radius: var(--radius-full);
+  margin: 0 auto 14px;
+}
+
+.modal-harga {
+  color: var(--color-accent);
+  font-weight: 800;
+  font-size: 16px;
+  margin-top: 4px;
+}
+
+.modal-group {
+  margin-top: 18px;
+}
+
+.modal-group-title {
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.wajib-tag {
+  font-size: 10px;
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  padding: 2px 7px;
+  border-radius: var(--radius-full);
+  font-weight: 700;
+}
+
+.modal-opsi {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid var(--color-line);
+  border-radius: 12px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.modal-opsi.dipilih {
+  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+}
+
+.modal-catatan {
+  width: 100%;
+  border: 1px solid var(--color-line);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-family: var(--font-sans);
+  font-size: 14px;
+  min-height: 70px;
+  resize: vertical;
+}
+
+.modal-qty-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 18px;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.modal-submit {
+  width: 100%;
+  margin-top: 18px;
+  background: var(--color-accent);
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: var(--radius-full);
+  font-weight: 800;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.modal-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ---------- Halaman keranjang ---------- */
+.cart-line {
+  background: var(--color-card);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  margin-bottom: 10px;
+}
+
+.cart-line-top {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.cart-line-addon {
+  font-size: 12.5px;
+  color: var(--color-ink-soft);
+  margin-top: 4px;
+}
+
+.cart-line-catatan {
+  font-size: 12.5px;
+  color: var(--color-ink-soft);
+  margin-top: 4px;
+  font-style: italic;
+}
+
+.cart-line-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.hapus-line-btn {
+  background: none;
+  border: none;
+  color: var(--color-accent);
+  font-weight: 700;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.cart-total-row {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 800;
+  font-size: 16px;
+  padding: 16px 0;
+  border-top: 1px dashed var(--color-line);
+  margin-top: 6px;
+}
+
+.jam-select {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--color-line);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  margin-top: 8px;
+  background: var(--color-card);
+}
+
+.checkout-submit {
+  width: 100%;
+  background: var(--color-accent);
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: var(--radius-full);
+  font-weight: 800;
+  font-size: 15px;
+  margin-top: 16px;
+  cursor: pointer;
+}
+
+.checkout-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
