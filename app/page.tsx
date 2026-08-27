@@ -111,11 +111,6 @@ function IsiMenu({ namaUser }: { namaUser: string | null }) {
                 key={item.id}
                 className={`menu-card ${!item.tersedia ? "habis" : ""}`}
               >
-                <div className="menu-card-top">
-                  <span className="menu-card-label">{item.kategori}</span>
-                  <span className="menu-card-icon">{ikonKategori(item.kategori)}</span>
-                </div>
-
                 <div className="menu-card-value">
                   {item.nama}
                   {!item.tersedia && <span className="badge-habis">Habis</span>}
@@ -126,20 +121,18 @@ function IsiMenu({ namaUser }: { namaUser: string | null }) {
                 {item.deskripsi && (
                   <>
                     <div className="menu-card-divider" />
-                    <div className="menu-card-sub">📝 {item.deskripsi}</div>
+                    <div className="menu-card-sub">{item.deskripsi}</div>
                   </>
                 )}
 
-                <div className="menu-card-footer">
-                  <button
-                    className="tambah-btn"
-                    disabled={!item.tersedia}
-                    onClick={() => setItemDipilih(item)}
-                    aria-label={`Tambah ${item.nama}`}
-                  >
-                    +
-                  </button>
-                </div>
+                <button
+                  className="tambah-btn-mengambang"
+                  disabled={!item.tersedia}
+                  onClick={() => setItemDipilih(item)}
+                  aria-label={`Tambah ${item.nama}`}
+                >
+                  +
+                </button>
               </div>
             ))}
         </section>
