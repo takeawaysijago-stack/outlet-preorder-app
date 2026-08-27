@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import type { MenuItem } from "@/lib/types";
 import LoginGate from "@/components/LoginGate";
 import { dengarkanMenu } from "@/lib/menuService";
+import AddOnModal from "@/components/AddOnModal";
+import { bacaKeranjang, dengarkanKeranjang, hitungHargaLine } from "@/lib/cart";
 
 function formatRupiah(angka: number) {
   return new Intl.NumberFormat("id-ID", {
@@ -27,8 +30,10 @@ export default function HalamanMenu() {
 function IsiMenu({ namaUser }: { namaUser: string | null }) {
   const [daftarMenu, setDaftarMenu] = useState<MenuItem[]>([]);
   const [memuat, setMemuat] = useState(true);
-  const [keranjang, setKeranjang] = useState<Record<string, number>>({});
   const [kategoriAktif, setKategoriAktif] = useState<string | null>(null);
+  const [itemDipilih, setItemDipilih] = useState<MenuItem | null>(null);
+  const [totalItemKeranjang, setTotalItemKeranjang] = useState(0);
+  const [totalHargaKeranjang, setTotalHargaKeranjang] = useState(0);
 
   useEffect(() => {
     const unsubscribe = dengarkanMenu((items) => {
@@ -38,33 +43,22 @@ function IsiMenu({ namaUser }: { namaUser: string | null }) {
     return () => unsubscribe();
   }, []);
 
+  useEffect(() => {
+    function muatUlangKeranjang() {
+      const lines = bacaKeranjang();
+      setTotalItemKeranjang(lines.reduce((s, l) => s + l.qty, 0));
+      setTotalHargaKeranjang(lines.reduce((s, l) => s + hitungHargaLine(l), 0));
+    }
+    muatUlangKeranjang();
+    return dengarkanKeranjang(muatUlangKeranjang);
+  }, []);
+
   const kategoriList = useMemo(() => {
     const set = new Set(daftarMenu.map((m) => m.kategori));
     return Array.from(set);
   }, [daftarMenu]);
 
-  const kategoriTampil = kategoriAktif
-    ? [kategoriAktif]
-    : kategoriList;
-
-  const totalItem = Object.values(keranjang).reduce((a, b) => a + b, 0);
-  const totalHarga = Object.entries(keranjang).reduce((sum, [id, qty]) => {
-    const item = daftarMenu.find((m) => m.id === id);
-    return sum + (item ? item.harga * qty : 0);
-  }, 0);
-
-  function ubahQty(id: string, delta: number) {
-    setKeranjang((prev) => {
-      const qtyBaru = (prev[id] ?? 0) + delta;
-      const next = { ...prev };
-      if (qtyBaru <= 0) {
-        delete next[id];
-      } else {
-        next[id] = qtyBaru;
-      }
-      return next;
-    });
-  }
+  const kategoriTampil = kategoriAktif ? [kategoriAktif] : kategoriList;
 
   return (
     <main>
@@ -112,9 +106,7 @@ function IsiMenu({ namaUser }: { namaUser: string | null }) {
           <div className="kategori-title">{kategori}</div>
           {daftarMenu
             .filter((m) => m.kategori === kategori)
-            .map((item) => {
-            const qty = keranjang[item.id] ?? 0;
-            return (
+            .map((item) => (
               <div
                 key={item.id}
                 className={`menu-card ${!item.tersedia ? "habis" : ""}`}
@@ -139,44 +131,34 @@ function IsiMenu({ namaUser }: { namaUser: string | null }) {
                 )}
 
                 <div className="menu-card-footer">
-                  {item.tersedia && qty === 0 && (
-                    <button
-                      className="tambah-btn"
-                      onClick={() => ubahQty(item.id, 1)}
-                      aria-label={`Tambah ${item.nama}`}
-                    >
-                      +
-                    </button>
-                  )}
-
-                  {item.tersedia && qty > 0 && (
-                    <div className="stepper">
-                      <button onClick={() => ubahQty(item.id, -1)} aria-label="Kurangi">
-                        −
-                      </button>
-                      <span className="qty">{qty}</span>
-                      <button onClick={() => ubahQty(item.id, 1)} aria-label="Tambah">
-                        +
-                      </button>
-                    </div>
-                  )}
+                  <button
+                    className="tambah-btn"
+                    disabled={!item.tersedia}
+                    onClick={() => setItemDipilih(item)}
+                    aria-label={`Tambah ${item.nama}`}
+                  >
+                    +
+                  </button>
                 </div>
               </div>
-            );
-          })}
+            ))}
         </section>
       ))}
 
-      {totalItem > 0 && (
+      {totalItemKeranjang > 0 && (
         <div className="cart-float-wrap">
-          <div className="cart-float">
+          <Link href="/keranjang" className="cart-float">
             <span className="cart-total">
-              {totalItem} item
-              <small>{formatRupiah(totalHarga)}</small>
+              {totalItemKeranjang} item
+              <small>{formatRupiah(totalHargaKeranjang)}</small>
             </span>
-            <button>Lihat Keranjang</button>
-          </div>
+            <span>Lihat Keranjang</span>
+          </Link>
         </div>
+      )}
+
+      {itemDipilih && (
+        <AddOnModal item={itemDipilih} onClose={() => setItemDipilih(null)} />
       )}
     </main>
   );
