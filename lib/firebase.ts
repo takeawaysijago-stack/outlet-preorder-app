@@ -4,7 +4,7 @@
 // Firebase Console > Project Settings > General > Your apps > SDK setup and config
 
 import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { initializeFirestore, getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
@@ -19,6 +19,15 @@ const firebaseConfig = {
 // Mencegah Firebase di-inisialisasi dua kali saat hot-reload di development
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
-export const db = getFirestore(app);
+// ignoreUndefinedProperties: true -> field yang nilainya undefined (misal
+// catatan yang tidak diisi customer) otomatis diabaikan, tidak bikin error.
+// Kalau sudah pernah diinisialisasi sebelumnya (hot-reload), pakai getFirestore biasa.
+let db;
+try {
+  db = initializeFirestore(app, { ignoreUndefinedProperties: true });
+} catch {
+  db = getFirestore(app);
+}
+export { db };
 export const auth = getAuth(app);
 export default app;
