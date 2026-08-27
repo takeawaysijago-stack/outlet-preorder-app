@@ -8,6 +8,8 @@ export async function buatPesanan(data: {
   items: OrderItem[];
   totalHarga: number;
   jamAmbil: string;
+  metodePembayaran: "qris" | "virtual_account";
+  biayaAdmin: number;
 }) {
   const ref = await addDoc(collection(db, "orders"), {
     uid: data.uid,
@@ -15,6 +17,8 @@ export async function buatPesanan(data: {
     items: data.items,
     totalHarga: data.totalHarga,
     jamAmbil: data.jamAmbil,
+    metodePembayaran: data.metodePembayaran,
+    biayaAdmin: data.biayaAdmin,
     status: "menunggu_pembayaran",
     createdAt: new Date().toISOString(),
   });
