@@ -15,7 +15,8 @@ import {
 import { buatPesanan, updateStatusPesanan } from "@/lib/orderService";
 import { loadSnapScript } from "@/lib/loadSnap";
 import { hitungBiayaAdmin, labelMetode, type MetodeBayar } from "@/lib/biayaAdmin";
-import type { OrderItem } from "@/lib/types";
+import { dengarkanPengaturan } from "@/lib/settingsService";
+import type { OrderItem, OperationalHours } from "@/lib/types";
 
 function formatRupiah(angka: number) {
   return new Intl.NumberFormat("id-ID", {
@@ -25,15 +26,27 @@ function formatRupiah(angka: number) {
   }).format(angka);
 }
 
-// Sementara: slot jam ambil digenerate manual tiap 30 menit untuk 4 jam ke depan.
-// Nanti diganti mengikuti jam operasional yang diatur admin.
-function generateSlotJam(): { label: string; iso: string }[] {
-  const slots: { label: string; iso: string }[] = [];
+// Generate slot jam ambil berdasarkan pengaturan admin:
+// - Waktu tersaran default = waktu sekarang + defaultMenitPenyiapan,
+//   TAPI tidak boleh lebih awal dari jam buka outlet hari ini.
+// - Slot dibuat tiap 15 menit, dimulai dari waktu tersaran itu.
+function generateSlotJam(settings: OperationalHours): { label: string; iso: string }[] {
   const sekarang = new Date();
-  let mulai = new Date(sekarang.getTime() + 30 * 60 * 1000);
+  const [jamBukaH, jamBukaM] = settings.jamBuka.split(":").map(Number);
+
+  const jamBukaHariIni = new Date(sekarang);
+  jamBukaHariIni.setHours(jamBukaH, jamBukaM, 0, 0);
+
+  const usulan = new Date(
+    sekarang.getTime() + settings.defaultMenitPenyiapan * 60 * 1000
+  );
+
+  let mulai = usulan < jamBukaHariIni ? jamBukaHariIni : usulan;
+  mulai = new Date(mulai);
   mulai.setMinutes(Math.ceil(mulai.getMinutes() / 15) * 15, 0, 0);
 
-  for (let i = 0; i < 10; i++) {
+  const slots: { label: string; iso: string }[] = [];
+  for (let i = 0; i < 12; i++) {
     const waktu = new Date(mulai.getTime() + i * 15 * 60 * 1000);
     slots.push({
       label: waktu.toLocaleTimeString("id-ID", {
@@ -59,7 +72,17 @@ function IsiKeranjang({ user }: { user: { uid: string; displayName: string | nul
   const [sukses, setSukses] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const slotJam = useMemo(() => generateSlotJam(), []);
+  const [jamOps, setJamOps] = useState<OperationalHours>({
+    jamMulaiPesan: "09:00",
+    jamBuka: "12:00",
+    defaultMenitPenyiapan: 15,
+  });
+
+  useEffect(() => {
+    return dengarkanPengaturan(setJamOps);
+  }, []);
+
+  const slotJam = useMemo(() => generateSlotJam(jamOps), [jamOps]);
 
   useEffect(() => {
     function muatUlang() {
