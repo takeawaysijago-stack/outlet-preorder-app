@@ -1,4 +1,4 @@
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, doc, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { OrderItem } from "@/lib/types";
 
@@ -19,4 +19,8 @@ export async function buatPesanan(data: {
     createdAt: new Date().toISOString(),
   });
   return ref.id;
+}
+
+export async function updateStatusPesanan(orderId: string, status: string) {
+  await updateDoc(doc(db, "orders", orderId), { status });
 }
