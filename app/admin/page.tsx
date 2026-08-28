@@ -5,6 +5,9 @@ import type { AddOnGroup, AddOnOption, MenuItem } from "@/lib/types";
 import { dengarkanMenu, tambahMenu, updateMenu, hapusMenu } from "@/lib/menuService";
 import { dengarkanPengaturan, simpanPengaturan } from "@/lib/settingsService";
 import type { OperationalHours } from "@/lib/types";
+import LoginGate from "@/components/LoginGate";
+import AdminGuard from "@/components/AdminGuard";
+import Link from "next/link";
 
 function formatRupiah(angka: number) {
   return new Intl.NumberFormat("id-ID", {
@@ -24,6 +27,18 @@ const FORM_KOSONG = {
 };
 
 export default function HalamanAdmin() {
+  return (
+    <LoginGate>
+      {(user) => (
+        <AdminGuard user={user}>
+          <IsiAdmin />
+        </AdminGuard>
+      )}
+    </LoginGate>
+  );
+}
+
+function IsiAdmin() {
   const [daftarMenu, setDaftarMenu] = useState<MenuItem[]>([]);
   const [memuat, setMemuat] = useState(true);
   const [form, setForm] = useState(FORM_KOSONG);
@@ -192,6 +207,9 @@ export default function HalamanAdmin() {
         <p className="subtitle">
           Tambah, ubah, atau hapus menu dan add-on-nya di sini.
         </p>
+        <Link href="/admin/pesanan" className="tambah-btn-lebar" style={{ display: "inline-block", marginTop: 12, textDecoration: "none" }}>
+          Lihat Pesanan Masuk →
+        </Link>
       </header>
 
       <section className="kategori-section">
