@@ -1,6 +1,6 @@
-import { collection, addDoc, doc, updateDoc } from "firebase/firestore";
+import { collection, addDoc, doc, updateDoc, onSnapshot, query, orderBy } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import type { OrderItem } from "@/lib/types";
+import type { Order, OrderItem } from "@/lib/types";
 
 export async function buatPesanan(data: {
   uid: string;
@@ -27,4 +27,15 @@ export async function buatPesanan(data: {
 
 export async function updateStatusPesanan(orderId: string, status: string) {
   await updateDoc(doc(db, "orders", orderId), { status });
+}
+
+export function dengarkanSemuaPesanan(callback: (orders: Order[]) => void) {
+  const q = query(collection(db, "orders"), orderBy("createdAt", "desc"));
+  return onSnapshot(q, (snapshot) => {
+    const orders: Order[] = snapshot.docs.map((d) => ({
+      id: d.id,
+      ...(d.data() as Omit<Order, "id">),
+    }));
+    callback(orders);
+  });
 }
