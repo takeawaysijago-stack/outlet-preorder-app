@@ -49,8 +49,11 @@ export type OrderStatus =
 
 export type Order = {
   id: string;
+  uid: string;
+  namaCustomer: string | null;
   items: OrderItem[];
   totalHarga: number;
+  biayaAdmin?: number;
   jamAmbil: string; // ISO datetime
   status: OrderStatus;
   metodePembayaran?: "qris" | "virtual_account";
