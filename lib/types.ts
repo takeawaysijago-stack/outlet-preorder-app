@@ -27,7 +27,8 @@ export type MenuItem = {
 
 export type OrderItemAddOnPilihan = {
   groupId: string;
-  optionIds: string[];
+  groupJudul: string;
+  opsiTerpilih: { id: string; nama: string; hargaTambahan: number }[];
 };
 
 export type OrderItem = {
