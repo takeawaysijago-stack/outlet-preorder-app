@@ -30,7 +30,7 @@ function cetakStruk(order: Order) {
   const baris = order.items
     .map((it) => {
       const addOnText = it.addOnDipilih
-        .map((g) => `${g.groupJudul}: ${g.opsiTerpilih.map((o) => o.nama).join(", ")}`)
+        .map((g) => `${g.groupJudul ?? ""}: ${(g.opsiTerpilih ?? []).map((o) => o.nama).join(", ")}`)
         .join(" | ");
       return `
         <div style="margin-bottom:6px;">
@@ -231,9 +231,9 @@ function IsiPesanan() {
                   <div className="menu-card-sub" style={{ fontWeight: 600, color: "var(--color-ink)" }}>
                     {it.qty}× {it.namaMenu}
                   </div>
-                  {it.addOnDipilih.map((g) => (
+                  {(it.addOnDipilih ?? []).map((g) => (
                     <div key={g.groupId} className="menu-card-sub" style={{ paddingLeft: 12 }}>
-                      {g.groupJudul}: {g.opsiTerpilih.map((o) => o.nama).join(", ")}
+                      {g.groupJudul ?? ""}: {(g.opsiTerpilih ?? []).map((o) => o.nama).join(", ")}
                     </div>
                   ))}
                   {it.catatan && (
