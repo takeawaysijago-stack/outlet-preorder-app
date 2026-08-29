@@ -9,6 +9,7 @@ import {
   type User,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
+import Link from "next/link";
 
 declare global {
   interface Window {
@@ -121,9 +122,14 @@ export default function LoginGate({
     <>
       <div className="top-bar">
         <span>Halo, {user.displayName?.split(" ")[0] ?? "Customer"}</span>
-        <button className="keluar-btn" onClick={() => signOut(auth)}>
-          Keluar
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <Link href="/pesanan" className="keluar-btn" style={{ textDecoration: "none" }}>
+            Pesanan Saya
+          </Link>
+          <button className="keluar-btn" onClick={() => signOut(auth)}>
+            Keluar
+          </button>
+        </div>
       </div>
       {children(user)}
     </>
