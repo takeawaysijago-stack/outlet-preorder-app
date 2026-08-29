@@ -115,10 +115,7 @@ function IsiKeranjang({ user }: { user: { uid: string; displayName: string | nul
           namaMenu: l.namaMenu,
           qty: l.qty,
           hargaSatuan: l.hargaSatuanDasar + tambahanPerUnit,
-          addOnDipilih: l.addOnDipilih.map((g) => ({
-            groupId: g.groupId,
-            optionIds: g.opsiTerpilih.map((o) => o.id),
-          })),
+          addOnDipilih: l.addOnDipilih,
           catatan: l.catatan,
         };
       });
