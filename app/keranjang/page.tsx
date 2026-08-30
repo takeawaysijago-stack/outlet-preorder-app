@@ -157,12 +157,12 @@ function IsiKeranjang({ user }: { user: { uid: string; displayName: string | nul
         onSuccess: async () => {
           await updateStatusPesanan(orderId, "dibayar");
           kosongkanKeranjang();
-          setSukses(orderId);
+          router.push("/pesanan");
         },
         onPending: async () => {
           // Untuk VA: pembayaran belum masuk, customer masih perlu transfer.
           kosongkanKeranjang();
-          setSukses(orderId);
+          router.push("/pesanan");
         },
         onError: () => {
           setError("Pembayaran gagal. Silakan coba lagi.");
