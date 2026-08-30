@@ -71,6 +71,37 @@ function cetakStruk(order: Order) {
   w.document.close();
 }
 
+function CountdownJamAmbil({ jamAmbil }: { jamAmbil: string }) {
+  const [sisaDetik, setSisaDetik] = useState(() =>
+    Math.round((new Date(jamAmbil).getTime() - Date.now()) / 1000)
+  );
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setSisaDetik(Math.round((new Date(jamAmbil).getTime() - Date.now()) / 1000));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [jamAmbil]);
+
+  const kritis = sisaDetik <= 5 * 60;
+
+  let teks: string;
+  if (sisaDetik <= 0) {
+    teks = "⏰ Waktu ambil terlewat!";
+  } else {
+    const jam = Math.floor(sisaDetik / 3600);
+    const menit = Math.floor((sisaDetik % 3600) / 60);
+    const detik = sisaDetik % 60;
+    if (jam > 0) {
+      teks = `⏳ ${jam}j ${menit}m lagi`;
+    } else {
+      teks = `⏳ ${String(menit).padStart(2, "0")}:${String(detik).padStart(2, "0")} lagi`;
+    }
+  }
+
+  return <div className={`countdown-box ${kritis ? "kritis" : ""}`}>{teks}</div>;
+}
+
 export default function HalamanAdmin() {
   return (
     <LoginGate>
@@ -240,6 +271,10 @@ function IsiPesanan() {
                   )}
                 </div>
               ))}
+
+              {order.status !== "selesai" && order.status !== "dibatalkan" && (
+                <CountdownJamAmbil jamAmbil={order.jamAmbil} />
+              )}
 
               <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
                 {statusBerikutnya && (
