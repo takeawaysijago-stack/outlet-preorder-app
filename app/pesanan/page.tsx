@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import LoginGate from "@/components/LoginGate";
 import { dengarkanPesananSaya } from "@/lib/orderService";
 import { LABEL_STATUS } from "@/lib/orderLabels";
@@ -50,6 +51,18 @@ function IsiPesananSaya({ uid }: { uid: string }) {
     <main>
       <header className="app-header">
         <h1>Pesanan Saya</h1>
+        <Link
+          href="/"
+          className="tambah-btn-lebar"
+          style={{
+            display: "inline-block",
+            marginTop: 12,
+            textDecoration: "none",
+            background: "var(--color-ink)",
+          }}
+        >
+          ← Kembali ke Menu
+        </Link>
       </header>
 
       <section className="kategori-section">
