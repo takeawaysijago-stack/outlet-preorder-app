@@ -676,3 +676,53 @@ button { font-family: var(--font-sans); }
   font-weight: 700;
   color: var(--color-ink-soft);
 }
+
+/* ---------- Ikon status kecil (pojok kanan atas kartu) ---------- */
+.status-mini {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 17px;
+  flex: none;
+}
+
+.status-mini.spinner-mini {
+  border: 3px solid var(--color-accent-soft);
+  border-top-color: var(--color-accent);
+  animation: putar 0.8s linear infinite;
+}
+
+.status-mini.selesai-mini {
+  background: #1a7f37;
+  color: white;
+  font-weight: 800;
+}
+
+.status-mini.batal-mini {
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  font-weight: 800;
+  animation: goyang-pelan 1.5s ease-in-out infinite;
+}
+
+.status-mini.tunggu-mini {
+  background: #fff4d6;
+  animation: kedip 1.4s ease-in-out infinite;
+}
+
+.status-mini.siap-mini {
+  animation: goyang 1.2s ease-in-out infinite;
+}
+
+@keyframes goyang-pelan {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-8deg); }
+}
+
+@keyframes kedip {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
