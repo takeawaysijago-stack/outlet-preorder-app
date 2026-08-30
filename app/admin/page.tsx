@@ -86,7 +86,7 @@ export default function HalamanAdmin() {
 function IsiPesanan() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [memuat, setMemuat] = useState(true);
-  const [filter, setFilter] = useState<OrderStatus | "semua">("semua");
+  const [filter, setFilter] = useState<OrderStatus>("dibayar");
 
   useEffect(() => {
     const unsubscribe = dengarkanSemuaPesanan((data) => {
@@ -119,16 +119,13 @@ function IsiPesanan() {
     return hasil;
   }, [orders]);
 
-  const ordersTampil = orders.filter((o) =>
-    filter === "semua" ? o.status !== "menunggu_pembayaran" : o.status === filter
-  );
+  const ordersTampil = orders.filter((o) => o.status === filter);
 
-  const tabList: { key: OrderStatus | "semua"; label: string }[] = [
-    { key: "semua", label: "Semua" },
-    { key: "dibayar", label: LABEL_STATUS.dibayar },
-    { key: "sedang_disiapkan", label: LABEL_STATUS.sedang_disiapkan },
-    { key: "siap_diambil", label: LABEL_STATUS.siap_diambil },
-    { key: "selesai", label: LABEL_STATUS.selesai },
+  const tabList: { key: OrderStatus; label: string }[] = [
+    { key: "dibayar", label: "Pesanan Masuk" },
+    { key: "sedang_disiapkan", label: "Disiapkan" },
+    { key: "siap_diambil", label: "Siap Diambil" },
+    { key: "selesai", label: "Selesai" },
   ];
 
   return (
@@ -182,7 +179,7 @@ function IsiPesanan() {
 
       <nav className="kategori-tabs">
         {tabList.map((tab) => {
-          const jumlah = tab.key === "semua" ? undefined : jumlahPerStatus[tab.key];
+          const jumlah = jumlahPerStatus[tab.key];
           return (
             <button
               key={tab.key}
