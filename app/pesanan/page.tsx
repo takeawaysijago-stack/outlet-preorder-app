@@ -31,6 +31,36 @@ const WARNA_STATUS: Record<string, { bg: string; teks: string }> = {
   dibatalkan: { bg: "var(--color-accent-soft)", teks: "var(--color-accent)" },
 };
 
+function IndikatorStatus({ status }: { status: string }) {
+  if (status === "selesai") {
+    return (
+      <div className="status-indikator">
+        <div className="centang-selesai">✓</div>
+        <span className="status-indikator-teks">Pesanan Selesai</span>
+      </div>
+    );
+  }
+  if (status === "siap_diambil") {
+    return (
+      <div className="status-indikator">
+        <div className="bel-siap">🔔</div>
+        <span className="status-indikator-teks">Siap Diambil di Outlet!</span>
+      </div>
+    );
+  }
+  if (status === "dibayar" || status === "sedang_disiapkan") {
+    return (
+      <div className="status-indikator">
+        <div className="spinner-proses" />
+        <span className="status-indikator-teks">
+          {status === "dibayar" ? "Menunggu Diproses…" : "Sedang Disiapkan…"}
+        </span>
+      </div>
+    );
+  }
+  return null;
+}
+
 export default function HalamanPesananSaya() {
   return <LoginGate>{(user) => <IsiPesananSaya uid={user.uid} />}</LoginGate>;
 }
@@ -91,6 +121,10 @@ function IsiPesananSaya({ uid }: { uid: string }) {
 
               <div className="menu-card-value">Ambil jam {formatJam(order.jamAmbil)}</div>
               <div className="menu-card-harga-besar">{formatRupiah(order.totalHarga)}</div>
+              <div className="menu-card-divider" />
+
+              <IndikatorStatus status={order.status} />
+
               <div className="menu-card-divider" />
 
               {order.items.map((it, idx) => (
