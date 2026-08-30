@@ -31,34 +31,36 @@ const WARNA_STATUS: Record<string, { bg: string; teks: string }> = {
   dibatalkan: { bg: "var(--color-accent-soft)", teks: "var(--color-accent)" },
 };
 
-function IndikatorStatus({ status }: { status: string }) {
+function IkonStatusKecil({ status }: { status: string }) {
   if (status === "selesai") {
-    return (
-      <div className="status-indikator">
-        <div className="centang-selesai">✓</div>
-        <span className="status-indikator-teks">Pesanan Selesai</span>
-      </div>
-    );
+    return <div className="status-mini selesai-mini">✓</div>;
   }
   if (status === "siap_diambil") {
-    return (
-      <div className="status-indikator">
-        <div className="bel-siap">🔔</div>
-        <span className="status-indikator-teks">Siap Diambil di Outlet!</span>
-      </div>
-    );
+    return <div className="status-mini siap-mini">🔔</div>;
   }
   if (status === "dibayar" || status === "sedang_disiapkan") {
-    return (
-      <div className="status-indikator">
-        <div className="spinner-proses" />
-        <span className="status-indikator-teks">
-          {status === "dibayar" ? "Menunggu Diproses…" : "Sedang Disiapkan…"}
-        </span>
-      </div>
-    );
+    return <div className="status-mini spinner-mini" />;
+  }
+  if (status === "dibatalkan") {
+    return <div className="status-mini batal-mini">✕</div>;
+  }
+  if (status === "menunggu_pembayaran") {
+    return <div className="status-mini tunggu-mini">⏳</div>;
   }
   return null;
+}
+
+function TeksStatus({ status }: { status: string }) {
+  const teks: Record<string, string> = {
+    dibayar: "Menunggu Diproses…",
+    sedang_disiapkan: "Sedang Disiapkan…",
+    siap_diambil: "Siap Diambil di Outlet!",
+    selesai: "Pesanan Selesai",
+    dibatalkan: "Pesanan Dibatalkan",
+    menunggu_pembayaran: "Menunggu Pembayaran",
+  };
+  if (!teks[status]) return null;
+  return <div className="status-indikator-teks" style={{ textAlign: "center" }}>{teks[status]}</div>;
 }
 
 export default function HalamanPesananSaya() {
@@ -110,26 +112,39 @@ function IsiPesananSaya({ uid }: { uid: string }) {
               <div className="menu-card-top">
                 <span className="menu-card-label">
                   #{order.id.slice(0, 8).toUpperCase()}
+                  <span
+                    className="badge-habis"
+                    style={{ marginLeft: 8, background: warna.bg, color: warna.teks }}
+                  >
+                    {LABEL_STATUS[order.status]}
+                  </span>
                 </span>
-                <span
-                  className="badge-habis"
-                  style={{ background: warna.bg, color: warna.teks }}
-                >
-                  {LABEL_STATUS[order.status]}
-                </span>
+                <IkonStatusKecil status={order.status} />
               </div>
 
               <div className="menu-card-value">Ambil jam {formatJam(order.jamAmbil)}</div>
               <div className="menu-card-harga-besar">{formatRupiah(order.totalHarga)}</div>
               <div className="menu-card-divider" />
 
-              <IndikatorStatus status={order.status} />
+              <TeksStatus status={order.status} />
 
               <div className="menu-card-divider" />
 
               {order.items.map((it, idx) => (
-                <div key={idx} className="menu-card-sub" style={{ marginBottom: 4 }}>
-                  {it.qty}× {it.namaMenu}
+                <div key={idx} style={{ marginBottom: 8 }}>
+                  <div className="menu-card-sub" style={{ fontWeight: 600, color: "var(--color-ink)" }}>
+                    {it.qty}× {it.namaMenu}
+                  </div>
+                  {(it.addOnDipilih ?? []).map((g) => (
+                    <div key={g.groupId} className="menu-card-sub" style={{ paddingLeft: 12 }}>
+                      {g.groupJudul ?? ""}: {(g.opsiTerpilih ?? []).map((o) => o.nama).join(", ")}
+                    </div>
+                  ))}
+                  {it.catatan && (
+                    <div className="menu-card-sub" style={{ paddingLeft: 12, fontStyle: "italic" }}>
+                      Catatan: {it.catatan}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
