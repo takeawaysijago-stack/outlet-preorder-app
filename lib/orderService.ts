@@ -41,16 +41,17 @@ export function dengarkanSemuaPesanan(callback: (orders: Order[]) => void) {
 }
 
 export function dengarkanPesananSaya(uid: string, callback: (orders: Order[]) => void) {
-  const q = query(
-    collection(db, "orders"),
-    where("uid", "==", uid),
-    orderBy("createdAt", "desc")
+  const q = query(collection(db, "orders"), where("uid", "==", uid));
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const orders: Order[] = snapshot.docs.map((d) => ({
+        id: d.id,
+        ...(d.data() as Omit<Order, "id">),
+      }));
+      orders.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+      callback(orders);
+    },
+    () => callback([])
   );
-  return onSnapshot(q, (snapshot) => {
-    const orders: Order[] = snapshot.docs.map((d) => ({
-      id: d.id,
-      ...(d.data() as Omit<Order, "id">),
-    }));
-    callback(orders);
-  });
 }
