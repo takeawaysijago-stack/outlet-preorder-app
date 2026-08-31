@@ -1,0 +1,12 @@
+{
+  "name": "Geprek Si Jago - Admin",
+  "short_name": "GSJ Admin",
+  "description": "Kelola menu & pesanan Geprek Si Jago.",
+  "start_url": "/admin",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000000",
+  "icons": [
+    { "src": "/logo.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
