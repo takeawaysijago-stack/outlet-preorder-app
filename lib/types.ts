@@ -52,6 +52,7 @@ export type Order = {
   id: string;
   uid: string;
   namaCustomer: string | null;
+  noHpCustomer?: string;
   items: OrderItem[];
   totalHarga: number;
   biayaAdmin?: number;
