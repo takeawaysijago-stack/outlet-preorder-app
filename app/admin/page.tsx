@@ -7,6 +7,7 @@ import AdminGuard from "@/components/AdminGuard";
 import { dengarkanSemuaPesanan, updateStatusPesanan } from "@/lib/orderService";
 import { LABEL_STATUS, STATUS_BERIKUTNYA } from "@/lib/orderLabels";
 import { IkonLonceng, IkonJamPasir } from "@/components/DoodleIcons";
+import { formatTanggalRelatif } from "@/lib/formatTanggal";
 import type { Order, OrderStatus } from "@/lib/types";
 
 function formatRupiah(angka: number) {
@@ -142,6 +143,9 @@ function IsiPesanan() {
   const [memuat, setMemuat] = useState(true);
   const [filter, setFilter] = useState<OrderStatus>("dibayar");
   const [alarmAktif, setAlarmAktif] = useState(false);
+  const [konfirmasi, setKonfirmasi] = useState<{ order: Order; statusBaru: OrderStatus } | null>(
+    null
+  );
   const idSudahDilihat = useRef<Set<string> | null>(null);
   const intervalAlarm = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -303,9 +307,12 @@ function IsiPesanan() {
           return (
             <div key={order.id} className="menu-card">
               <div className="menu-card-top">
-                <span className="menu-card-label">
-                  #{order.id.slice(0, 8).toUpperCase()} · {order.namaCustomer ?? "Customer"}
-                </span>
+                <div>
+                  <span className="menu-card-label">
+                    #{order.id.slice(0, 8).toUpperCase()} · {order.namaCustomer ?? "Customer"}
+                  </span>
+                  <div className="tanggal-relatif">{formatTanggalRelatif(order.createdAt)}</div>
+                </div>
                 <span
                   className="badge-habis"
                   style={{
@@ -349,7 +356,7 @@ function IsiPesanan() {
                   <button
                     className="tambah-btn-lebar"
                     style={{ padding: "8px 14px", fontSize: 13 }}
-                    onClick={() => updateStatusPesanan(order.id, statusBerikutnya)}
+                    onClick={() => setKonfirmasi({ order, statusBaru: statusBerikutnya })}
                   >
                     Tandai: {LABEL_STATUS[statusBerikutnya]}
                   </button>
@@ -383,6 +390,61 @@ function IsiPesanan() {
           );
         })}
       </section>
+
+      {konfirmasi && (
+        <div className="modal-overlay" onClick={() => setKonfirmasi(null)}>
+          <div className="modal-sheet" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-handle" />
+            <h2>Konfirmasi Status</h2>
+            <p style={{ fontSize: 13.5, color: "var(--color-ink-soft)", marginTop: 6 }}>
+              Yakin ubah pesanan{" "}
+              <strong>#{konfirmasi.order.id.slice(0, 8).toUpperCase()}</strong> jadi{" "}
+              <strong>{LABEL_STATUS[konfirmasi.statusBaru]}</strong>?
+            </p>
+
+            <div className="modal-group">
+              <div className="modal-group-title">Isi Pesanan</div>
+              {konfirmasi.order.items.map((it, idx) => (
+                <div key={idx} style={{ marginBottom: 6 }}>
+                  <div style={{ fontWeight: 700, fontSize: 14 }}>
+                    {it.qty}× {it.namaMenu}
+                  </div>
+                  {(it.addOnDipilih ?? []).map((g) => (
+                    <div key={g.groupId} style={{ fontSize: 12.5, color: "var(--color-ink-soft)", paddingLeft: 10 }}>
+                      {g.groupJudul ?? ""}: {(g.opsiTerpilih ?? []).map((o) => o.nama).join(", ")}
+                    </div>
+                  ))}
+                  {it.catatan && (
+                    <div style={{ fontSize: 12.5, color: "var(--color-ink-soft)", paddingLeft: 10, fontStyle: "italic" }}>
+                      Catatan: {it.catatan}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div style={{ display: "flex", gap: 10, marginTop: 18 }}>
+              <button
+                className="modal-submit"
+                style={{ background: "var(--color-ink)", flex: 1, marginTop: 0 }}
+                onClick={() => setKonfirmasi(null)}
+              >
+                Batal
+              </button>
+              <button
+                className="modal-submit"
+                style={{ flex: 1, marginTop: 0 }}
+                onClick={() => {
+                  updateStatusPesanan(konfirmasi.order.id, konfirmasi.statusBaru);
+                  setKonfirmasi(null);
+                }}
+              >
+                Ya, Yakin
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
