@@ -753,3 +753,18 @@ button { font-family: var(--font-sans); }
   0%, 100% { opacity: 1; }
   50% { opacity: 0.45; }
 }
+
+/* ---------- Banner alarm pesanan baru (admin) ---------- */
+.alarm-banner {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--color-accent);
+  color: white;
+  text-align: center;
+  padding: 14px;
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+  animation: kedip-kuat 0.9s ease-in-out infinite;
+}
