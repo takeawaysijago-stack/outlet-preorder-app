@@ -117,7 +117,7 @@ export default function LoginGate({
             </p>
           )}
         </div>
-        <div className="kategori-section" style={{ textAlign: "center", marginTop: 16 }}>
+        <div className="kategori-section" style={{ textAlign: "center", marginTop: 110 }}>
           <div className="peringatan-delivery">
             ⚠️ Bukan layanan delivery. Pesanan diambil langsung di outlet.
           </div>
