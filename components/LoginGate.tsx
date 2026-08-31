@@ -109,18 +109,18 @@ export default function LoginGate({
             Pesan dari rumah → bayar → datang → tinggal ambil.
           </p>
         </header>
-        <div className="kategori-section" style={{ textAlign: "center", marginTop: 8 }}>
-          <div className="peringatan-delivery">
-            ⚠️ Bukan layanan delivery. Pesanan diambil langsung di outlet.
-          </div>
-        </div>
-        <div className="kategori-section" style={{ textAlign: "center", marginTop: 12 }}>
+        <div className="kategori-section" style={{ textAlign: "center", marginTop: 20 }}>
           <div ref={tombolRef} style={{ display: "flex", justifyContent: "center" }} />
           {error && (
             <p style={{ color: "var(--color-accent)", fontSize: 13, marginTop: 12 }}>
               {error}
             </p>
           )}
+        </div>
+        <div className="kategori-section" style={{ textAlign: "center", marginTop: 16 }}>
+          <div className="peringatan-delivery">
+            ⚠️ Bukan layanan delivery. Pesanan diambil langsung di outlet.
+          </div>
         </div>
       </main>
     );
