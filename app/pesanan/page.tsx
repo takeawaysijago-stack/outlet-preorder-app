@@ -5,6 +5,7 @@ import Link from "next/link";
 import LoginGate from "@/components/LoginGate";
 import { dengarkanPesananSaya } from "@/lib/orderService";
 import { LABEL_STATUS } from "@/lib/orderLabels";
+import { IkonCentang, IkonLonceng, IkonSilang, IkonJamPasir } from "@/components/DoodleIcons";
 import type { Order } from "@/lib/types";
 
 function formatRupiah(angka: number) {
@@ -33,19 +34,19 @@ const WARNA_STATUS: Record<string, { bg: string; teks: string }> = {
 
 function IkonStatusKecil({ status }: { status: string }) {
   if (status === "selesai") {
-    return <div className="status-mini selesai-mini">✓</div>;
+    return <div className="status-mini selesai-mini"><IkonCentang size={18} /></div>;
   }
   if (status === "siap_diambil") {
-    return <div className="status-mini siap-mini">🔔</div>;
+    return <div className="status-mini siap-mini"><IkonLonceng size={20} /></div>;
   }
   if (status === "dibayar" || status === "sedang_disiapkan") {
     return <div className="status-mini spinner-mini" />;
   }
   if (status === "dibatalkan") {
-    return <div className="status-mini batal-mini">✕</div>;
+    return <div className="status-mini batal-mini"><IkonSilang size={18} /></div>;
   }
   if (status === "menunggu_pembayaran") {
-    return <div className="status-mini tunggu-mini">⏳</div>;
+    return <div className="status-mini tunggu-mini"><IkonJamPasir size={18} /></div>;
   }
   return null;
 }
