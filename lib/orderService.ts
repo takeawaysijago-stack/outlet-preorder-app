@@ -5,6 +5,7 @@ import type { Order, OrderItem } from "@/lib/types";
 export async function buatPesanan(data: {
   uid: string;
   namaCustomer: string | null;
+  noHpCustomer: string;
   items: OrderItem[];
   totalHarga: number;
   jamAmbil: string;
@@ -14,6 +15,7 @@ export async function buatPesanan(data: {
   const ref = await addDoc(collection(db, "orders"), {
     uid: data.uid,
     namaCustomer: data.namaCustomer,
+    noHpCustomer: data.noHpCustomer,
     items: data.items,
     totalHarga: data.totalHarga,
     jamAmbil: data.jamAmbil,
