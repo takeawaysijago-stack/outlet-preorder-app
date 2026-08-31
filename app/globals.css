@@ -785,3 +785,33 @@ button { font-family: var(--font-sans); }
   justify-content: center;
   gap: 8px;
 }
+
+/* ---------- Label tanggal relatif (kecil, di pesanan) ---------- */
+.tanggal-relatif {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--color-ink-soft);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* ---------- Tagline halaman login ---------- */
+.login-tagline {
+  font-size: 26px;
+  margin-top: 6px;
+  line-height: 1.15;
+}
+
+.peringatan-delivery {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  border: 1.5px dashed var(--color-accent);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 12.5px;
+  font-weight: 700;
+  text-align: left;
+}
