@@ -6,6 +6,7 @@ import LoginGate from "@/components/LoginGate";
 import { dengarkanPesananSaya } from "@/lib/orderService";
 import { LABEL_STATUS } from "@/lib/orderLabels";
 import { IkonCentang, IkonLonceng, IkonSilang, IkonJamPasir } from "@/components/DoodleIcons";
+import { formatTanggalRelatif } from "@/lib/formatTanggal";
 import type { Order } from "@/lib/types";
 
 function formatRupiah(angka: number) {
@@ -111,15 +112,18 @@ function IsiPesananSaya({ uid }: { uid: string }) {
           return (
             <div key={order.id} className="menu-card">
               <div className="menu-card-top">
-                <span className="menu-card-label">
-                  #{order.id.slice(0, 8).toUpperCase()}
-                  <span
-                    className="badge-habis"
-                    style={{ marginLeft: 8, background: warna.bg, color: warna.teks }}
-                  >
-                    {LABEL_STATUS[order.status]}
+                <div>
+                  <span className="menu-card-label">
+                    #{order.id.slice(0, 8).toUpperCase()}
+                    <span
+                      className="badge-habis"
+                      style={{ marginLeft: 8, background: warna.bg, color: warna.teks }}
+                    >
+                      {LABEL_STATUS[order.status]}
+                    </span>
                   </span>
-                </span>
+                  <div className="tanggal-relatif">{formatTanggalRelatif(order.createdAt)}</div>
+                </div>
                 <IkonStatusKecil status={order.status} />
               </div>
 
