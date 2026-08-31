@@ -67,6 +67,7 @@ function IsiKeranjang({ user }: { user: { uid: string; displayName: string | nul
   const router = useRouter();
   const [lines, setLines] = useState<CartLine[]>([]);
   const [jamAmbil, setJamAmbil] = useState("");
+  const [noHp, setNoHp] = useState("");
   const [metode, setMetode] = useState<MetodeBayar>("qris");
   const [mengirim, setMengirim] = useState(false);
   const [sukses, setSukses] = useState<string | null>(null);
@@ -102,6 +103,13 @@ function IsiKeranjang({ user }: { user: { uid: string; displayName: string | nul
 
   async function konfirmasiPesanan() {
     if (lines.length === 0 || !jamAmbil) return;
+
+    const nomorBersih = noHp.replace(/[^0-9]/g, "");
+    if (nomorBersih.length < 9) {
+      setError("Nomor WhatsApp wajib diisi dengan benar (minimal 9 digit).");
+      return;
+    }
+
     setError(null);
     setMengirim(true);
     try {
@@ -123,6 +131,7 @@ function IsiKeranjang({ user }: { user: { uid: string; displayName: string | nul
       const orderId = await buatPesanan({
         uid: user.uid,
         namaCustomer: user.displayName,
+        noHpCustomer: noHp.trim(),
         items,
         totalHarga: total,
         jamAmbil,
@@ -268,6 +277,20 @@ function IsiKeranjang({ user }: { user: { uid: string; displayName: string | nul
 
         {lines.length > 0 && (
           <>
+            <div className="modal-group-title" style={{ marginTop: 20 }}>
+              Nomor WhatsApp
+            </div>
+            <input
+              type="tel"
+              className="jam-select"
+              placeholder="Contoh: 081234567890"
+              value={noHp}
+              onChange={(e) => setNoHp(e.target.value)}
+            />
+            <p style={{ fontSize: 11.5, color: "var(--color-ink-soft)", marginTop: 4 }}>
+              Dipakai outlet buat konfirmasi pesanan lewat WhatsApp.
+            </p>
+
             <div className="modal-group-title" style={{ marginTop: 20 }}>
               Metode Pembayaran
             </div>
