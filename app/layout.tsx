@@ -1,11 +1,17 @@
 import type { Metadata, Viewport } from "next";
-import { Manrope } from "next/font/google";
+import { Manrope, Baloo_2 } from "next/font/google";
 import "./globals.css";
 
 const manrope = Manrope({
   subsets: ["latin"],
   variable: "--font-jakarta",
   weight: ["400", "500", "600", "700", "800"],
+});
+
+const baloo = Baloo_2({
+  subsets: ["latin"],
+  variable: "--font-display",
+  weight: ["600", "700", "800"],
 });
 
 export const metadata: Metadata = {
@@ -27,7 +33,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="id">
-      <body className={manrope.variable}>{children}</body>
+      <body className={`${manrope.variable} ${baloo.variable}`}>{children}</body>
     </html>
   );
 }
