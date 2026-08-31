@@ -8,6 +8,7 @@ import { dengarkanSemuaPesanan, updateStatusPesanan } from "@/lib/orderService";
 import { LABEL_STATUS, STATUS_BERIKUTNYA } from "@/lib/orderLabels";
 import { IkonLonceng, IkonJamPasir } from "@/components/DoodleIcons";
 import { formatTanggalRelatif } from "@/lib/formatTanggal";
+import { buatLinkWA } from "@/lib/whatsapp";
 import type { Order, OrderStatus } from "@/lib/types";
 
 function formatRupiah(angka: number) {
@@ -360,6 +361,27 @@ function IsiPesanan() {
                   >
                     Tandai: {LABEL_STATUS[statusBerikutnya]}
                   </button>
+                )}
+                {order.noHpCustomer && (
+                  <a
+                    href={buatLinkWA(
+                      order.noHpCustomer,
+                      `Halo ${order.namaCustomer ?? ""}, ini dari Geprek Si Jago mengenai pesanan #${order.id.slice(0, 8).toUpperCase()} (${order.items.map((it) => `${it.qty}x ${it.namaMenu}`).join(", ")}). `
+                    )}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      ...linkBtnStyle,
+                      border: "1px solid #25D366",
+                      color: "#1a9e4e",
+                      borderRadius: 999,
+                      padding: "8px 14px",
+                      textDecoration: "none",
+                      display: "inline-block",
+                    }}
+                  >
+                    Chat WA
+                  </a>
                 )}
                 <button
                   onClick={() => cetakStruk(order)}
