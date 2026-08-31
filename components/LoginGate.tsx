@@ -103,10 +103,18 @@ export default function LoginGate({
       <main>
         <img src="/logo.png" alt="Geprek Si Jago" className="brand-logo" />
         <header className="app-header" style={{ textAlign: "center", paddingTop: 10 }}>
-          <h1>Geprek Si Jago</h1>
-          <p className="subtitle">Masuk untuk mulai memesan.</p>
+          <div className="eyebrow" style={{ textAlign: "center" }}>Geprek Si Jago</div>
+          <h1 className="login-tagline">Pesan · Bayar · Tinggal Ambil</h1>
+          <p className="subtitle">
+            Pesan dari rumah → bayar → datang → tinggal ambil.
+          </p>
         </header>
-        <div className="kategori-section" style={{ textAlign: "center", marginTop: 24 }}>
+        <div className="kategori-section" style={{ textAlign: "center", marginTop: 8 }}>
+          <div className="peringatan-delivery">
+            ⚠️ Bukan layanan delivery. Pesanan diambil langsung di outlet.
+          </div>
+        </div>
+        <div className="kategori-section" style={{ textAlign: "center", marginTop: 12 }}>
           <div ref={tombolRef} style={{ display: "flex", justifyContent: "center" }} />
           {error && (
             <p style={{ color: "var(--color-accent)", fontSize: 13, marginTop: 12 }}>
