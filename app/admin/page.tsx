@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import LoginGate from "@/components/LoginGate";
 import AdminGuard from "@/components/AdminGuard";
@@ -114,18 +114,74 @@ export default function HalamanAdmin() {
   );
 }
 
+function bunyikanBip() {
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.25, ctx.currentTime);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.25);
+    osc.onended = () => ctx.close();
+  } catch {
+    // Browser tidak dukung / belum ada interaksi user -- diamkan saja
+  }
+}
+
 function IsiPesanan() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [memuat, setMemuat] = useState(true);
   const [filter, setFilter] = useState<OrderStatus>("dibayar");
+  const [alarmAktif, setAlarmAktif] = useState(false);
+  const idSudahDilihat = useRef<Set<string> | null>(null);
+  const intervalAlarm = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     const unsubscribe = dengarkanSemuaPesanan((data) => {
+      const idDibayarSekarang = new Set(
+        data.filter((o) => o.status === "dibayar").map((o) => o.id)
+      );
+
+      if (idSudahDilihat.current === null) {
+        // Pertama kali load, jangan bunyikan alarm buat pesanan yang sudah ada dari awal
+        idSudahDilihat.current = idDibayarSekarang;
+      } else {
+        const adaPesananBaru = [...idDibayarSekarang].some(
+          (id) => !idSudahDilihat.current!.has(id)
+        );
+        if (adaPesananBaru) {
+          setAlarmAktif(true);
+        }
+        idSudahDilihat.current = idDibayarSekarang;
+      }
+
       setOrders(data);
       setMemuat(false);
     });
     return () => unsubscribe();
   }, []);
+
+  useEffect(() => {
+    if (alarmAktif) {
+      bunyikanBip();
+      if (navigator.vibrate) navigator.vibrate([300, 150, 300]);
+      intervalAlarm.current = setInterval(() => {
+        bunyikanBip();
+        if (navigator.vibrate) navigator.vibrate([300, 150, 300]);
+      }, 2500);
+    }
+    return () => {
+      if (intervalAlarm.current) clearInterval(intervalAlarm.current);
+    };
+  }, [alarmAktif]);
+
+  function matikanAlarm() {
+    setAlarmAktif(false);
+    if (intervalAlarm.current) clearInterval(intervalAlarm.current);
+  }
 
   const rekapHariIni = useMemo(() => {
     const hariIni = new Date().toDateString();
@@ -161,6 +217,12 @@ function IsiPesanan() {
 
   return (
     <main>
+      {alarmAktif && (
+        <div className="alarm-banner" onClick={matikanAlarm}>
+          🔔 Pesanan baru masuk! Tap untuk matikan alarm
+        </div>
+      )}
+
       <header className="app-header">
         <div className="eyebrow">Khusus staf</div>
         <h1>Pesanan Masuk</h1>
