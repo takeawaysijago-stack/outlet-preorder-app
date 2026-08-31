@@ -6,6 +6,7 @@ import LoginGate from "@/components/LoginGate";
 import AdminGuard from "@/components/AdminGuard";
 import { dengarkanSemuaPesanan, updateStatusPesanan } from "@/lib/orderService";
 import { LABEL_STATUS, STATUS_BERIKUTNYA } from "@/lib/orderLabels";
+import { IkonLonceng, IkonJamPasir } from "@/components/DoodleIcons";
 import type { Order, OrderStatus } from "@/lib/types";
 
 function formatRupiah(angka: number) {
@@ -87,19 +88,24 @@ function CountdownJamAmbil({ jamAmbil }: { jamAmbil: string }) {
 
   let teks: string;
   if (sisaDetik <= 0) {
-    teks = "⏰ Waktu ambil terlewat!";
+    teks = "Waktu ambil terlewat!";
   } else {
     const jam = Math.floor(sisaDetik / 3600);
     const menit = Math.floor((sisaDetik % 3600) / 60);
     const detik = sisaDetik % 60;
     if (jam > 0) {
-      teks = `⏳ ${jam}j ${menit}m lagi`;
+      teks = `${jam}j ${menit}m lagi`;
     } else {
-      teks = `⏳ ${String(menit).padStart(2, "0")}:${String(detik).padStart(2, "0")} lagi`;
+      teks = `${String(menit).padStart(2, "0")}:${String(detik).padStart(2, "0")} lagi`;
     }
   }
 
-  return <div className={`countdown-box ${kritis ? "kritis" : ""}`}>{teks}</div>;
+  return (
+    <div className={`countdown-box ${kritis ? "kritis" : ""}`}>
+      <IkonJamPasir size={18} />
+      {teks}
+    </div>
+  );
 }
 
 export default function HalamanAdmin() {
@@ -219,7 +225,7 @@ function IsiPesanan() {
     <main>
       {alarmAktif && (
         <div className="alarm-banner" onClick={matikanAlarm}>
-          🔔 Pesanan baru masuk! Tap untuk matikan alarm
+          <IkonLonceng size={20} /> Pesanan baru masuk! Tap untuk matikan alarm
         </div>
       )}
 
