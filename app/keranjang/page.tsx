@@ -155,7 +155,8 @@ function IsiKeranjang({ user }: { user: { uid: string; displayName: string | nul
       const data = await res.json();
 
       if (!res.ok || !data.token) {
-        setError("Gagal menyiapkan pembayaran. Pesanan tetap tersimpan, coba lagi.");
+        const detail = typeof data.error === "string" ? data.error : JSON.stringify(data.error);
+        setError(`Gagal menyiapkan pembayaran: ${detail || "coba lagi."}`);
         setMengirim(false);
         return;
       }
