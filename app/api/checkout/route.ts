@@ -152,6 +152,7 @@ export async function POST(req: Request) {
 
     return Response.json({ token: data.token, redirect_url: data.redirect_url });
   } catch (err) {
-    return Response.json({ error: "Gagal menghubungi Midtrans." }, { status: 500 });
+    const pesan = err instanceof Error ? err.message : "Error tidak diketahui";
+    return Response.json({ error: `Gagal menghubungi Midtrans: ${pesan}` }, { status: 500 });
   }
 }
