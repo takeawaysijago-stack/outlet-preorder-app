@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import LoginGate from "@/components/LoginGate";
 import { dengarkanPesananSaya } from "@/lib/orderService";
-import { LABEL_STATUS } from "@/lib/orderLabels";
-import { IkonCentang, IkonLonceng, IkonSilang, IkonJamPasir } from "@/components/DoodleIcons";
+import { LABEL_STATUS, kodePesanan } from "@/lib/orderLabels";
+import { IkonCentang, IkonLonceng, IkonSilang, IkonJamPasir, IkonPiring } from "@/components/DoodleIcons";
 import { formatTanggalRelatif } from "@/lib/formatTanggal";
 import type { Order } from "@/lib/types";
 
@@ -34,15 +34,6 @@ const WARNA_STATUS: Record<string, { bg: string; teks: string }> = {
 };
 
 function IkonStatusKecil({ status }: { status: string }) {
-  if (status === "selesai") {
-    return <div className="status-mini selesai-mini"><IkonCentang size={18} /></div>;
-  }
-  if (status === "siap_diambil") {
-    return <div className="status-mini siap-mini"><IkonLonceng size={20} /></div>;
-  }
-  if (status === "dibayar" || status === "sedang_disiapkan") {
-    return <div className="status-mini spinner-mini" />;
-  }
   if (status === "dibatalkan") {
     return <div className="status-mini batal-mini"><IkonSilang size={18} /></div>;
   }
@@ -52,17 +43,54 @@ function IkonStatusKecil({ status }: { status: string }) {
   return null;
 }
 
-function TeksStatus({ status }: { status: string }) {
-  const teks: Record<string, string> = {
-    dibayar: "Menunggu Diproses…",
-    sedang_disiapkan: "Sedang Disiapkan…",
-    siap_diambil: "Siap Diambil di Outlet!",
-    selesai: "Pesanan Selesai",
-    dibatalkan: "Pesanan Dibatalkan",
-    menunggu_pembayaran: "Menunggu Pembayaran",
-  };
-  if (!teks[status]) return null;
-  return <div className="status-indikator-teks" style={{ textAlign: "center" }}>{teks[status]}</div>;
+const TAHAPAN = [
+  { key: "dibayar", label: "Diterima", Ikon: IkonCentang },
+  { key: "sedang_disiapkan", label: "Disiapkan", Ikon: IkonPiring },
+  { key: "siap_diambil", label: "Siap Diambil", Ikon: IkonLonceng },
+  { key: "selesai", label: "Selesai", Ikon: IkonCentang },
+] as const;
+
+function ProgresPesanan({ status }: { status: string }) {
+  if (status === "dibatalkan") {
+    return (
+      <div className="status-indikator">
+        <div className="status-mini batal-mini" style={{ width: 44, height: 44 }}>
+          <IkonSilang size={22} />
+        </div>
+        <span className="status-indikator-teks">Pesanan Dibatalkan</span>
+      </div>
+    );
+  }
+  if (status === "menunggu_pembayaran") {
+    return (
+      <div className="status-indikator">
+        <div className="status-mini tunggu-mini" style={{ width: 44, height: 44 }}>
+          <IkonJamPasir size={22} />
+        </div>
+        <span className="status-indikator-teks">Menunggu Pembayaran</span>
+      </div>
+    );
+  }
+
+  const indexAktif = TAHAPAN.findIndex((t) => t.key === status);
+
+  return (
+    <div className="progres-track">
+      {TAHAPAN.map((t, i) => {
+        const kelas = i < indexAktif ? "selesai" : i === indexAktif ? "aktif" : "";
+        return (
+          <div key={t.key} className={`progres-step ${kelas}`}>
+            <div className={`progres-lingkaran ${kelas}`}>
+              <t.Ikon size={16} />
+            </div>
+            <span className={`progres-label ${i <= indexAktif ? "aktif" : ""}`}>
+              {t.label}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 export default function HalamanPesananSaya() {
@@ -114,7 +142,7 @@ function IsiPesananSaya({ uid }: { uid: string }) {
               <div className="menu-card-top">
                 <div>
                   <span className="menu-card-label">
-                    #{order.id.slice(0, 8).toUpperCase()}
+                    {kodePesanan(order)}
                     <span
                       className="badge-habis"
                       style={{ marginLeft: 8, background: warna.bg, color: warna.teks }}
@@ -131,7 +159,7 @@ function IsiPesananSaya({ uid }: { uid: string }) {
               <div className="menu-card-harga-besar">{formatRupiah(order.totalHarga)}</div>
               <div className="menu-card-divider" />
 
-              <TeksStatus status={order.status} />
+              <ProgresPesanan status={order.status} />
 
               <div className="menu-card-divider" />
 
