@@ -23,7 +23,16 @@ function initAdmin() {
   });
 }
 
+let sudahDiatur = false;
+
 export function getAdminDb() {
   const app = initAdmin();
-  return getFirestore(app);
+  const db = getFirestore(app);
+  if (!sudahDiatur) {
+    // Field yang nilainya undefined (misal catatan yang tidak diisi customer)
+    // otomatis diabaikan, tidak bikin error -- sama seperti di client SDK.
+    db.settings({ ignoreUndefinedProperties: true });
+    sudahDiatur = true;
+  }
+  return db;
 }
