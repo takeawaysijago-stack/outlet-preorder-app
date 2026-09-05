@@ -7,6 +7,7 @@ import LoginGate from "@/components/LoginGate";
 import { dengarkanMenu } from "@/lib/menuService";
 import AddOnModal from "@/components/AddOnModal";
 import { bacaKeranjang, dengarkanKeranjang, hitungHargaLine } from "@/lib/cart";
+import { dengarkanPengaturan } from "@/lib/settingsService";
 
 function formatRupiah(angka: number) {
   return new Intl.NumberFormat("id-ID", {
@@ -34,6 +35,15 @@ function IsiMenu({ namaUser }: { namaUser: string | null }) {
   const [itemDipilih, setItemDipilih] = useState<MenuItem | null>(null);
   const [totalItemKeranjang, setTotalItemKeranjang] = useState(0);
   const [totalHargaKeranjang, setTotalHargaKeranjang] = useState(0);
+  const [tokoBuka, setTokoBuka] = useState(true);
+  const [memuatToko, setMemuatToko] = useState(true);
+
+  useEffect(() => {
+    return dengarkanPengaturan((settings) => {
+      setTokoBuka(settings.tokoBuka !== false);
+      setMemuatToko(false);
+    });
+  }, []);
 
   useEffect(() => {
     const unsubscribe = dengarkanMenu((items) => {
@@ -59,6 +69,20 @@ function IsiMenu({ namaUser }: { namaUser: string | null }) {
   }, [daftarMenu]);
 
   const kategoriTampil = kategoriAktif ? [kategoriAktif] : kategoriList;
+
+  if (!memuatToko && !tokoBuka) {
+    return (
+      <main>
+        <img src="/logo.png" alt="Geprek Si Jago" className="brand-logo" />
+        <header className="app-header" style={{ textAlign: "center", paddingTop: 10 }}>
+          <h1>Maaf, Toko Sedang Tutup</h1>
+          <p className="subtitle">
+            Pemesanan belum bisa dilakukan sekarang. Coba lagi nanti, ya!
+          </p>
+        </header>
+      </main>
+    );
+  }
 
   return (
     <main>
