@@ -77,6 +77,27 @@ function IsiAdmin() {
     });
   }
 
+  async function toggleOpsiCepat(item: MenuItem, groupId: string, opsiId: string) {
+    const addOnGroupsBaru = item.addOnGroups.map((g) =>
+      g.id !== groupId
+        ? g
+        : {
+            ...g,
+            opsi: g.opsi.map((o) =>
+              o.id !== opsiId ? o : { ...o, tersedia: o.tersedia === false }
+            ),
+          }
+    );
+    await updateMenu(item.id, {
+      nama: item.nama,
+      deskripsi: item.deskripsi,
+      harga: item.harga,
+      kategori: item.kategori,
+      tersedia: item.tersedia,
+      addOnGroups: addOnGroupsBaru,
+    });
+  }
+
   useEffect(() => {
     const unsubscribe = dengarkanMenu((items) => {
       setDaftarMenu(items);
@@ -421,7 +442,7 @@ function IsiAdmin() {
                       opacity: opsi.tersedia === false ? 0.5 : 1,
                     }}
                   >
-                    <span className="toggle-switch" style={{ flex: "none" }}>
+                    <label className="toggle-switch" style={{ flex: "none" }}>
                       <input
                         type="checkbox"
                         checked={opsi.tersedia !== false}
@@ -430,7 +451,7 @@ function IsiAdmin() {
                         }
                       />
                       <span className="toggle-slider" />
-                    </span>
+                    </label>
                     <input
                       placeholder="Nama opsi (contoh: Es Teh)"
                       value={opsi.nama}
@@ -526,6 +547,42 @@ function IsiAdmin() {
                 </button>
               </div>
             </div>
+
+            {item.addOnGroups.length > 0 && (
+              <div style={{ marginTop: 12, paddingTop: 12, borderTop: "1px dashed var(--color-line)" }}>
+                {item.addOnGroups.map((g) => (
+                  <div key={g.id} style={{ marginBottom: 8 }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: "var(--color-ink-soft)", marginBottom: 4 }}>
+                      {g.judul}
+                    </div>
+                    {g.opsi.map((o) => (
+                      <label
+                        key={o.id}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                          fontSize: 13,
+                          padding: "4px 0",
+                        }}
+                      >
+                        <span className="toggle-switch" style={{ flex: "none" }}>
+                          <input
+                            type="checkbox"
+                            checked={o.tersedia !== false}
+                            onChange={() => toggleOpsiCepat(item, g.id, o.id)}
+                          />
+                          <span className="toggle-slider" />
+                        </span>
+                        <span style={{ opacity: o.tersedia === false ? 0.5 : 1 }}>
+                          {o.nama}
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         ))}
       </section>
