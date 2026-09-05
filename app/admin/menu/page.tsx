@@ -66,6 +66,12 @@ function IsiAdmin() {
     }
   }
 
+  async function toggleTokoBuka() {
+    const jamOpsBaru = { ...jamOps, tokoBuka: !(jamOps.tokoBuka !== false) };
+    setJamOps(jamOpsBaru);
+    await simpanPengaturan(jamOpsBaru);
+  }
+
   async function toggleTersedia(item: MenuItem) {
     await updateMenu(item.id, {
       nama: item.nama,
@@ -266,7 +272,7 @@ function IsiAdmin() {
               <input
                 type="checkbox"
                 checked={jamOps.tokoBuka !== false}
-                onChange={(e) => setJamOps((j) => ({ ...j, tokoBuka: e.target.checked }))}
+                onChange={toggleTokoBuka}
               />
               <span className="toggle-slider" />
             </span>
