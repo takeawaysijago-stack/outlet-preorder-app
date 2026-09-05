@@ -1,4 +1,9 @@
-import type { OrderStatus } from "@/lib/types";
+import type { Order, OrderStatus } from "@/lib/types";
+
+// Nomor pesanan yang ditampilkan ke user
+export function kodePesanan(order: Pick<Order, "id">): string {
+  return `#${order.id.slice(0, 8).toUpperCase()}`;
+}
 
 export const LABEL_STATUS: Record<OrderStatus, string> = {
   menunggu_pembayaran: "Menunggu Pembayaran",
