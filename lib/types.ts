@@ -5,6 +5,7 @@ export type AddOnOption = {
   id: string;
   nama: string; // contoh: "Nasi", "Es Teh Manis"
   hargaTambahan: number; // 0 kalau gratis
+  tersedia?: boolean; // default true kalau belum diset
 };
 
 export type AddOnGroup = {
@@ -67,4 +68,5 @@ export type OperationalHours = {
   jamMulaiPesan: string; // format "HH:mm", contoh "09:00"
   jamBuka: string; // format "HH:mm", contoh "12:00"
   defaultMenitPenyiapan: number; // default 30
+  tokoBuka?: boolean; // default true kalau belum diset
 };
