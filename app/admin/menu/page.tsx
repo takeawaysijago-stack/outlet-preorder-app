@@ -69,7 +69,12 @@ function IsiAdmin() {
   async function toggleTokoBuka() {
     const jamOpsBaru = { ...jamOps, tokoBuka: !(jamOps.tokoBuka !== false) };
     setJamOps(jamOpsBaru);
-    await simpanPengaturan(jamOpsBaru);
+    try {
+      await simpanPengaturan(jamOpsBaru);
+    } catch (e) {
+      const pesan = e instanceof Error ? e.message : "Error tidak diketahui";
+      alert(`Gagal menyimpan status toko: ${pesan}`);
+    }
   }
 
   async function toggleTersedia(item: MenuItem) {
