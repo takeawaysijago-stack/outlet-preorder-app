@@ -100,20 +100,24 @@ export default function AddOnModal({
             </div>
             {g.opsi.map((o) => {
               const dipilih = (pilihan[g.id] ?? []).includes(o.id);
+              const habis = o.tersedia === false;
               return (
                 <label
                   key={o.id}
                   className={`modal-opsi ${dipilih ? "dipilih" : ""}`}
+                  style={habis ? { opacity: 0.5, cursor: "not-allowed" } : undefined}
                 >
                   <span>
                     {o.nama}
                     {o.hargaTambahan > 0 &&
                       ` (+${formatRupiah(o.hargaTambahan)})`}
+                    {habis && <span className="badge-habis" style={{ marginLeft: 6 }}>Habis</span>}
                   </span>
                   <input
                     type={g.pilihanMaksimal <= 1 ? "radio" : "checkbox"}
                     checked={dipilih}
-                    onChange={() => toggleOpsi(g, o.id)}
+                    disabled={habis}
+                    onChange={() => !habis && toggleOpsi(g, o.id)}
                   />
                 </label>
               );
