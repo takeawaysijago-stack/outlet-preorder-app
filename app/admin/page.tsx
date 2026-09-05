@@ -5,7 +5,7 @@ import Link from "next/link";
 import LoginGate from "@/components/LoginGate";
 import AdminGuard from "@/components/AdminGuard";
 import { dengarkanSemuaPesanan, updateStatusPesanan } from "@/lib/orderService";
-import { LABEL_STATUS, STATUS_BERIKUTNYA } from "@/lib/orderLabels";
+import { LABEL_STATUS, STATUS_BERIKUTNYA, kodePesanan } from "@/lib/orderLabels";
 import { IkonLonceng, IkonJamPasir } from "@/components/DoodleIcons";
 import { formatTanggalRelatif } from "@/lib/formatTanggal";
 import { buatLinkWA } from "@/lib/whatsapp";
@@ -47,7 +47,7 @@ function cetakStruk(order: Order) {
   w.document.write(`
     <html>
       <head>
-        <title>Struk #${order.id.slice(0, 8).toUpperCase()}</title>
+        <title>Struk ${kodePesanan(order)}</title>
         <style>
           body { font-family: monospace; padding: 16px; font-size: 13px; }
           hr { border: none; border-top: 1px dashed #999; margin: 10px 0; }
@@ -59,7 +59,7 @@ function cetakStruk(order: Order) {
         <h2>Geprek Si Jago</h2>
         <p class="center">Struk Pesanan</p>
         <hr />
-        <div>No: #${order.id.slice(0, 8).toUpperCase()}</div>
+        <div>No: ${kodePesanan(order)}</div>
         <div>Nama: ${order.namaCustomer ?? "-"}</div>
         <div>Jam Ambil: ${formatJam(order.jamAmbil)}</div>
         <hr />
@@ -310,7 +310,7 @@ function IsiPesanan() {
               <div className="menu-card-top">
                 <div>
                   <span className="menu-card-label">
-                    #{order.id.slice(0, 8).toUpperCase()} · {order.namaCustomer ?? "Customer"}
+                    {kodePesanan(order)} · {order.namaCustomer ?? "Customer"}
                   </span>
                   <div className="tanggal-relatif">{formatTanggalRelatif(order.createdAt)}</div>
                 </div>
@@ -366,7 +366,7 @@ function IsiPesanan() {
                   <a
                     href={buatLinkWA(
                       order.noHpCustomer,
-                      `Halo ${order.namaCustomer ?? ""}, ini dari Geprek Si Jago mengenai pesanan #${order.id.slice(0, 8).toUpperCase()} (${order.items.map((it) => `${it.qty}x ${it.namaMenu}`).join(", ")}). `
+                      `Halo ${order.namaCustomer ?? ""}, ini dari Geprek Si Jago mengenai pesanan ${kodePesanan(order)} (${order.items.map((it) => `${it.qty}x ${it.namaMenu}`).join(", ")}). `
                     )}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -420,7 +420,7 @@ function IsiPesanan() {
             <h2>Konfirmasi Status</h2>
             <p style={{ fontSize: 13.5, color: "var(--color-ink-soft)", marginTop: 6 }}>
               Yakin ubah pesanan{" "}
-              <strong>#{konfirmasi.order.id.slice(0, 8).toUpperCase()}</strong> jadi{" "}
+              <strong>{kodePesanan(konfirmasi.order)}</strong> jadi{" "}
               <strong>{LABEL_STATUS[konfirmasi.statusBaru]}</strong>?
             </p>
 
