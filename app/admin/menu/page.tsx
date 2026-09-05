@@ -49,6 +49,7 @@ function IsiAdmin() {
     jamMulaiPesan: "09:00",
     jamBuka: "12:00",
     defaultMenitPenyiapan: 15,
+    tokoBuka: true,
   });
   const [menyimpanJam, setMenyimpanJam] = useState(false);
 
@@ -172,6 +173,7 @@ function IsiAdmin() {
       id: crypto.randomUUID(),
       nama: "",
       hargaTambahan: 0,
+      tersedia: true,
     };
     updateGroup(groupId, {
       opsi: [
@@ -225,6 +227,29 @@ function IsiAdmin() {
           }}
         >
           <strong>Jam Operasional</strong>
+
+          <label
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              background: "var(--color-bg)",
+              borderRadius: 12,
+              padding: "10px 12px",
+            }}
+          >
+            <span style={{ fontSize: 13.5, fontWeight: 700 }}>
+              {jamOps.tokoBuka === false ? "Toko Sedang Tutup" : "Toko Sedang Buka"}
+            </span>
+            <span className="toggle-switch">
+              <input
+                type="checkbox"
+                checked={jamOps.tokoBuka !== false}
+                onChange={(e) => setJamOps((j) => ({ ...j, tokoBuka: e.target.checked }))}
+              />
+              <span className="toggle-slider" />
+            </span>
+          </label>
 
           <label style={{ fontSize: 13, color: "var(--color-ink-soft)" }}>
             Mulai bisa pesan (pre-order)
@@ -386,7 +411,26 @@ function IsiAdmin() {
                 </label>
 
                 {group.opsi.map((opsi) => (
-                  <div key={opsi.id} style={{ display: "flex", gap: 6, marginTop: 6 }}>
+                  <div
+                    key={opsi.id}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6,
+                      marginTop: 6,
+                      opacity: opsi.tersedia === false ? 0.5 : 1,
+                    }}
+                  >
+                    <span className="toggle-switch" style={{ flex: "none" }}>
+                      <input
+                        type="checkbox"
+                        checked={opsi.tersedia !== false}
+                        onChange={(e) =>
+                          updateOpsi(group.id, opsi.id, { tersedia: e.target.checked })
+                        }
+                      />
+                      <span className="toggle-slider" />
+                    </span>
                     <input
                       placeholder="Nama opsi (contoh: Es Teh)"
                       value={opsi.nama}
