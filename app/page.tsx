@@ -72,15 +72,15 @@ function IsiMenu({ namaUser }: { namaUser: string | null }) {
 
   if (!memuatToko && !tokoBuka) {
     return (
-      <main>
-        <img src="/logo.png" alt="Geprek Si Jago" className="brand-logo" />
-        <header className="app-header" style={{ textAlign: "center", paddingTop: 10 }}>
-          <h1>Maaf, Toko Sedang Tutup</h1>
-          <p className="subtitle">
-            Pemesanan belum bisa dilakukan sekarang. Coba lagi nanti, ya!
+      <div className="layar-tutup">
+        <div className="kotak-tutup">
+          <img src="/logo.png" alt="Geprek Si Jago" className="brand-logo" style={{ margin: "0 auto 16px" }} />
+          <h1>Maaf, Kami Sedang Tutup Sekarang</h1>
+          <p className="subtitle" style={{ marginTop: 8 }}>
+            Pemesanan belum bisa dilakukan. Coba lagi nanti, ya!
           </p>
-        </header>
-      </main>
+        </div>
+      </div>
     );
   }
 
