@@ -887,3 +887,24 @@ button { font-family: var(--font-sans); }
 .progres-label.aktif {
   color: var(--color-ink);
 }
+
+/* ---------- Layar "Toko Tutup" - efek kaca buram, di tengah ---------- */
+.layar-tutup {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.kotak-tutup {
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  border-radius: 20px;
+  padding: 40px 28px;
+  text-align: center;
+  max-width: 320px;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.18);
+}
