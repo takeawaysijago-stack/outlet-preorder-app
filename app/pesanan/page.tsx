@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import LoginGate from "@/components/LoginGate";
+import WhatsAppGate from "@/components/WhatsAppGate";
+import Memuat from "@/components/Memuat";
 import { dengarkanPesananSaya } from "@/lib/orderService";
 import { LABEL_STATUS, kodePesanan } from "@/lib/orderLabels";
 import { IkonCentang, IkonLonceng, IkonSilang, IkonJamPasir, IkonPiring } from "@/components/DoodleIcons";
@@ -94,7 +96,15 @@ function ProgresPesanan({ status }: { status: string }) {
 }
 
 export default function HalamanPesananSaya() {
-  return <LoginGate>{(user) => <IsiPesananSaya uid={user.uid} />}</LoginGate>;
+  return (
+    <LoginGate>
+      {(user) => (
+        <WhatsAppGate user={user}>
+          {() => <IsiPesananSaya uid={user.uid} />}
+        </WhatsAppGate>
+      )}
+    </LoginGate>
+  );
 }
 
 function IsiPesananSaya({ uid }: { uid: string }) {
@@ -128,7 +138,7 @@ function IsiPesananSaya({ uid }: { uid: string }) {
       </header>
 
       <section className="kategori-section">
-        {memuat && <p style={{ color: "var(--color-ink-soft)" }}>Memuat…</p>}
+        {memuat && <Memuat pesan={["Lagi ambil daftar pesanan kamu…"]} />}
         {!memuat && orders.length === 0 && (
           <p style={{ color: "var(--color-ink-soft)" }}>
             Belum ada pesanan. Yuk pesan menu dulu!

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import LoginGate from "@/components/LoginGate";
 import AdminGuard from "@/components/AdminGuard";
+import Memuat from "@/components/Memuat";
 import {
   dengarkanSemuaPesanan,
   updateStatusPesanan,
@@ -305,7 +306,7 @@ function IsiPesanan() {
       </nav>
 
       <section className="kategori-section">
-        {memuat && <p style={{ color: "var(--color-ink-soft)" }}>Memuat…</p>}
+        {memuat && <Memuat pesan={["Lagi ambil data pesanan…"]} />}
         {!memuat && ordersTampil.length === 0 && (
           <p style={{ color: "var(--color-ink-soft)" }}>Belum ada pesanan.</p>
         )}

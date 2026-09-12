@@ -10,6 +10,7 @@ import {
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import Link from "next/link";
+import Memuat from "@/components/Memuat";
 
 declare global {
   interface Window {
@@ -91,9 +92,7 @@ export default function LoginGate({
   if (memuat) {
     return (
       <main>
-        <div className="kategori-section">
-          <p style={{ color: "var(--color-ink-soft)" }}>Memuat…</p>
-        </div>
+        <Memuat pesan={["Lagi ngecek akun kamu…"]} />
       </main>
     );
   }

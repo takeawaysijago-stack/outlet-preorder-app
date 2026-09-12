@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import LoginGate from "@/components/LoginGate";
+import WhatsAppGate from "@/components/WhatsAppGate";
+import Memuat from "@/components/Memuat";
 import {
   bacaKeranjang,
   dengarkanKeranjang,
@@ -66,14 +68,27 @@ type OrderBayar = {
 };
 
 export default function HalamanKeranjang() {
-  return <LoginGate>{(user) => <IsiKeranjang user={user} />}</LoginGate>;
+  return (
+    <LoginGate>
+      {(user) => (
+        <WhatsAppGate user={user}>
+          {(noHp) => <IsiKeranjang user={user} noHp={noHp} />}
+        </WhatsAppGate>
+      )}
+    </LoginGate>
+  );
 }
 
-function IsiKeranjang({ user }: { user: { uid: string; displayName: string | null } }) {
+function IsiKeranjang({
+  user,
+  noHp,
+}: {
+  user: { uid: string; displayName: string | null };
+  noHp: string;
+}) {
   const router = useRouter();
   const [lines, setLines] = useState<CartLine[]>([]);
   const [jamAmbil, setJamAmbil] = useState("");
-  const [noHp, setNoHp] = useState("");
   const [mengirim, setMengirim] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [orderBayar, setOrderBayar] = useState<OrderBayar | null>(null);
@@ -107,12 +122,6 @@ function IsiKeranjang({ user }: { user: { uid: string; displayName: string | nul
   async function konfirmasiPesanan() {
     if (lines.length === 0 || !jamAmbil) return;
 
-    const nomorBersih = noHp.replace(/[^0-9]/g, "");
-    if (nomorBersih.length < 9) {
-      setError("Nomor WhatsApp wajib diisi dengan benar (minimal 9 digit).");
-      return;
-    }
-
     setError(null);
     setMengirim(true);
     try {
@@ -134,7 +143,7 @@ function IsiKeranjang({ user }: { user: { uid: string; displayName: string | nul
       const orderId = await buatPesanan({
         uid: user.uid,
         namaCustomer: user.displayName,
-        noHpCustomer: noHp.trim(),
+        noHpCustomer: noHp,
         items,
         totalHarga: subtotal,
         jamAmbil,
@@ -232,20 +241,6 @@ function IsiKeranjang({ user }: { user: { uid: string; displayName: string | nul
 
         {lines.length > 0 && (
           <>
-            <div className="modal-group-title" style={{ marginTop: 20 }}>
-              Nomor WhatsApp
-            </div>
-            <input
-              type="tel"
-              className="jam-select"
-              placeholder="Contoh: 081234567890"
-              value={noHp}
-              onChange={(e) => setNoHp(e.target.value)}
-            />
-            <p style={{ fontSize: 11.5, color: "var(--color-ink-soft)", marginTop: 4 }}>
-              Dipakai outlet buat konfirmasi pesanan lewat WhatsApp.
-            </p>
-
             <div className="modal-group-title" style={{ marginTop: 20 }}>
               Pembayaran
             </div>

@@ -4,10 +4,12 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { MenuItem } from "@/lib/types";
 import LoginGate from "@/components/LoginGate";
+import WhatsAppGate from "@/components/WhatsAppGate";
 import { dengarkanMenu } from "@/lib/menuService";
 import AddOnModal from "@/components/AddOnModal";
 import { bacaKeranjang, dengarkanKeranjang, hitungHargaLine } from "@/lib/cart";
 import { dengarkanPengaturan } from "@/lib/settingsService";
+import Memuat from "@/components/Memuat";
 
 function formatRupiah(angka: number) {
   return new Intl.NumberFormat("id-ID", {
@@ -25,7 +27,15 @@ function ikonKategori(kategori: string) {
 }
 
 export default function HalamanMenu() {
-  return <LoginGate>{(user) => <IsiMenu namaUser={user.displayName} />}</LoginGate>;
+  return (
+    <LoginGate>
+      {(user) => (
+        <WhatsAppGate user={user}>
+          {() => <IsiMenu namaUser={user.displayName} />}
+        </WhatsAppGate>
+      )}
+    </LoginGate>
+  );
 }
 
 function IsiMenu({ namaUser }: { namaUser: string | null }) {
@@ -112,9 +122,7 @@ function IsiMenu({ namaUser }: { namaUser: string | null }) {
       </nav>
 
       {memuat && (
-        <div className="kategori-section">
-          <p style={{ color: "var(--color-ink-soft)" }}>Memuat menu…</p>
-        </div>
+        <Memuat pesan={["Lagi nyusun menu hari ini…", "Ayam lagi digoreng…"]} />
       )}
 
       {!memuat && daftarMenu.length === 0 && (

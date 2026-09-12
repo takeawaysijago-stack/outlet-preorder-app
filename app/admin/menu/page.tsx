@@ -7,6 +7,7 @@ import { dengarkanPengaturan, simpanPengaturan } from "@/lib/settingsService";
 import type { OperationalHours } from "@/lib/types";
 import LoginGate from "@/components/LoginGate";
 import AdminGuard from "@/components/AdminGuard";
+import Memuat from "@/components/Memuat";
 import Link from "next/link";
 
 function formatRupiah(angka: number) {
@@ -522,7 +523,7 @@ function IsiAdmin() {
 
       <section className="kategori-section">
         <div className="kategori-title">Daftar Menu ({daftarMenu.length})</div>
-        {memuat && <p style={{ color: "var(--color-ink-soft)" }}>Memuat…</p>}
+        {memuat && <Memuat pesan={["Lagi ambil data menu…"]} />}
         {daftarMenu.map((item) => (
           <div key={item.id} className={`menu-card ${!item.tersedia ? "habis" : ""}`}>
             <div className="menu-card-value">{item.nama}</div>
