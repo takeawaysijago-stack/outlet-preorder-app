@@ -370,6 +370,23 @@ function HalamanBayarManual({
             alt="QRIS Pembayaran"
             style={{ maxWidth: 260, width: "100%", margin: "0 auto" }}
           />
+          <a
+            href={QRIS_IMAGE_PATH}
+            download="qris-geprek-si-jago.jpg"
+            style={{
+              display: "inline-block",
+              marginTop: 12,
+              padding: "8px 16px",
+              borderRadius: "var(--radius-full)",
+              border: "1.5px solid var(--color-ink)",
+              color: "var(--color-ink)",
+              fontSize: 13,
+              fontWeight: 600,
+              textDecoration: "none",
+            }}
+          >
+            ⬇ Unduh QRIS
+          </a>
         </div>
 
         <div
