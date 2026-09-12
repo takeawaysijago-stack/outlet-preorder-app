@@ -17,7 +17,7 @@ import {
 import { buatPesanan, simpanBuktiTransfer } from "@/lib/orderService";
 import { kompresGambarKeBase64 } from "@/lib/gambar";
 import { dengarkanPengaturan } from "@/lib/settingsService";
-import { REKENING_BRI, QRIS_IMAGE_PATH } from "@/lib/pembayaranConfig";
+import { QRIS_IMAGE_PATH } from "@/lib/pembayaranConfig";
 import type { OrderItem, OperationalHours } from "@/lib/types";
 
 function formatRupiah(angka: number) {
@@ -245,15 +245,19 @@ function IsiKeranjang({
               Pembayaran
             </div>
             <p style={{ fontSize: 13, color: "var(--color-ink-soft)" }}>
-              Transfer manual ke rekening BRI lewat QRIS. Setelah pesanan
-              dibuat, kamu akan dapat kode unik & QRIS buat transfer, lalu
-              upload bukti transfernya di sini.
+              Bayar pakai QRIS. Setelah pesanan dikonfirmasi, kamu akan dapat
+              kode unik & QRIS buat transfer, lalu upload bukti transfernya
+              di sini.
             </p>
 
             <div className="cart-total-row">
               <span>Total Bayar</span>
               <span>{formatRupiah(subtotal)}</span>
             </div>
+            <p style={{ fontSize: 11.5, color: "var(--color-ink-soft)", marginTop: -8 }}>
+              *Nanti ditambah kode unik 3 digit di layar berikutnya, supaya
+              verifikasi transfer lebih cepat.
+            </p>
 
             <div className="modal-group-title">Jam Ambil</div>
             <select
@@ -366,11 +370,6 @@ function HalamanBayarManual({
             alt="QRIS Pembayaran"
             style={{ maxWidth: 260, width: "100%", margin: "0 auto" }}
           />
-          <p style={{ fontSize: 12, color: "var(--color-ink-soft)", marginTop: 8 }}>
-            Atau transfer manual ke rekening BRI
-            <br />
-            <strong>{REKENING_BRI.nomor}</strong> a.n. {REKENING_BRI.atasNama}
-          </p>
         </div>
 
         <div
@@ -404,16 +403,18 @@ function HalamanBayarManual({
         <label
           style={{
             display: "block",
-            border: "1.5px dashed var(--color-line)",
+            background: "var(--color-card)",
+            border: "2px dashed var(--color-accent)",
             borderRadius: "var(--radius-lg)",
-            padding: 16,
+            padding: 20,
             textAlign: "center",
             fontSize: 13.5,
-            color: "var(--color-ink-soft)",
+            fontWeight: 600,
+            color: "var(--color-ink)",
             cursor: "pointer",
           }}
         >
-          {file ? file.name : "Ketuk untuk pilih foto/screenshot bukti transfer"}
+          {file ? `📎 ${file.name}` : "📷 Ketuk untuk pilih foto/screenshot bukti transfer"}
           <input
             type="file"
             accept="image/*"

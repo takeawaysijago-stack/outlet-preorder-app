@@ -7,7 +7,7 @@ export function kodePesanan(order: Pick<Order, "id">): string {
 
 export const LABEL_STATUS: Record<OrderStatus, string> = {
   menunggu_pembayaran: "Menunggu Pembayaran",
-  menunggu_verifikasi: "Perlu Verifikasi",
+  menunggu_verifikasi: "Sedang Verifikasi Pembayaran",
   dibayar: "Sudah Dibayar",
   sedang_disiapkan: "Sedang Disiapkan",
   siap_diambil: "Siap Diambil",

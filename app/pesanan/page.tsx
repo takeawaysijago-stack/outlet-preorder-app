@@ -167,6 +167,31 @@ function IsiPesananSaya({ uid }: { uid: string }) {
 
               <div className="menu-card-value">Ambil jam {formatJam(order.jamAmbil)}</div>
               <div className="menu-card-harga-besar">{formatRupiah(order.totalHarga)}</div>
+
+              {(order.status === "menunggu_pembayaran" ||
+                order.status === "menunggu_verifikasi") &&
+                order.kodeUnik != null && (
+                  <div
+                    style={{
+                      background: "var(--color-accent-soft)",
+                      borderRadius: "var(--radius-md)",
+                      padding: "10px 12px",
+                      marginTop: 8,
+                      marginBottom: 4,
+                    }}
+                  >
+                    <div style={{ fontSize: 11.5, color: "var(--color-ink-soft)" }}>
+                      Transfer PAS sejumlah
+                    </div>
+                    <div style={{ fontSize: 17, fontWeight: 800 }}>
+                      {formatRupiah(order.totalTransfer ?? order.totalHarga)}{" "}
+                      <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--color-accent)" }}>
+                        (kode {order.kodeUnik})
+                      </span>
+                    </div>
+                  </div>
+                )}
+
               <div className="menu-card-divider" />
 
               <ProgresPesanan status={order.status} />
