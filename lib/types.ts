@@ -62,6 +62,9 @@ export type Order = {
   kodeUnik?: number;
   // totalHarga + kodeUnik -- ini nominal PAS yang wajib ditransfer customer.
   totalTransfer?: number;
+  // Foto bukti transfer, disimpan sebagai base64 data URI langsung di
+  // Firestore (bukan link ke Firebase Storage) -- supaya tidak perlu upgrade
+  // ke paket Blaze. Ukurannya sudah dikompres kecil di sisi customer.
   buktiTransferUrl?: string;
   buktiTransferUploadedAt?: string;
   jamAmbil: string; // ISO datetime

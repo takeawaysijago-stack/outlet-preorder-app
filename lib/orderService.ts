@@ -1,6 +1,5 @@
 import { collection, addDoc, doc, updateDoc, onSnapshot, query, orderBy, where } from "firebase/firestore";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
-import { db, storage } from "@/lib/firebase";
+import { db } from "@/lib/firebase";
 import type { Order, OrderItem } from "@/lib/types";
 
 export async function buatPesanan(data: {
@@ -28,21 +27,16 @@ export async function updateStatusPesanan(orderId: string, status: string) {
   await updateDoc(doc(db, "orders", orderId), { status });
 }
 
-// Dipanggil setelah customer upload foto bukti transfer. Pesanan pindah ke
+// Dipanggil setelah customer pilih foto bukti transfer (sudah dikompres jadi
+// base64 di browser lewat lib/gambar.ts). Disimpan langsung di dokumen
+// Firestore -- gak pakai Firebase Storage sama sekali. Pesanan pindah ke
 // status "menunggu_verifikasi" supaya muncul di tab khusus admin.
-export async function simpanBuktiTransfer(orderId: string, file: File) {
-  const path = `bukti-transfer/${orderId}-${Date.now()}-${file.name}`;
-  const storageRef = ref(storage, path);
-  await uploadBytes(storageRef, file);
-  const url = await getDownloadURL(storageRef);
-
+export async function simpanBuktiTransfer(orderId: string, buktiBase64: string) {
   await updateDoc(doc(db, "orders", orderId), {
-    buktiTransferUrl: url,
+    buktiTransferUrl: buktiBase64,
     buktiTransferUploadedAt: new Date().toISOString(),
     status: "menunggu_verifikasi",
   });
-
-  return url;
 }
 
 // Admin klik "Verifikasi & Terima" -- nominal & bukti sudah dicek manual, cocok.

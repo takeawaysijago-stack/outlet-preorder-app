@@ -13,6 +13,7 @@ import {
   type CartLine,
 } from "@/lib/cart";
 import { buatPesanan, simpanBuktiTransfer } from "@/lib/orderService";
+import { kompresGambarKeBase64 } from "@/lib/gambar";
 import { dengarkanPengaturan } from "@/lib/settingsService";
 import { REKENING_BRI, QRIS_IMAGE_PATH } from "@/lib/pembayaranConfig";
 import type { OrderItem, OperationalHours } from "@/lib/types";
@@ -312,10 +313,13 @@ function HalamanBayarManual({
     setError(null);
     setMengunggah(true);
     try {
-      await simpanBuktiTransfer(orderBayar.id, file);
+      const base64 = await kompresGambarKeBase64(file);
+      await simpanBuktiTransfer(orderBayar.id, base64);
       setSukses(true);
     } catch (e) {
-      setError("Gagal mengunggah bukti transfer. Coba lagi.");
+      const pesan =
+        e instanceof Error ? e.message : "Gagal menyimpan bukti transfer. Coba lagi.";
+      setError(pesan);
     } finally {
       setMengunggah(false);
     }
