@@ -12,10 +12,9 @@ import {
   updateQtyKeranjang,
   type CartLine,
 } from "@/lib/cart";
-import { buatPesanan, updateStatusPesanan } from "@/lib/orderService";
-import { loadSnapScript } from "@/lib/loadSnap";
-import { hitungBiayaAdmin, labelMetode, type MetodeBayar } from "@/lib/biayaAdmin";
+import { buatPesanan, simpanBuktiTransfer } from "@/lib/orderService";
 import { dengarkanPengaturan } from "@/lib/settingsService";
+import { REKENING_BRI, QRIS_IMAGE_PATH } from "@/lib/pembayaranConfig";
 import type { OrderItem, OperationalHours } from "@/lib/types";
 
 function formatRupiah(angka: number) {
@@ -59,6 +58,12 @@ function generateSlotJam(settings: OperationalHours): { label: string; iso: stri
   return slots;
 }
 
+type OrderBayar = {
+  id: string;
+  kodeUnik: number;
+  totalTransfer: number;
+};
+
 export default function HalamanKeranjang() {
   return <LoginGate>{(user) => <IsiKeranjang user={user} />}</LoginGate>;
 }
@@ -68,10 +73,9 @@ function IsiKeranjang({ user }: { user: { uid: string; displayName: string | nul
   const [lines, setLines] = useState<CartLine[]>([]);
   const [jamAmbil, setJamAmbil] = useState("");
   const [noHp, setNoHp] = useState("");
-  const [metode, setMetode] = useState<MetodeBayar>("qris");
   const [mengirim, setMengirim] = useState(false);
-  const [sukses, setSukses] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [orderBayar, setOrderBayar] = useState<OrderBayar | null>(null);
 
   const [jamOps, setJamOps] = useState<OperationalHours>({
     jamMulaiPesan: "09:00",
@@ -98,8 +102,6 @@ function IsiKeranjang({ user }: { user: { uid: string; displayName: string | nul
   }, [slotJam, jamAmbil]);
 
   const subtotal = lines.reduce((s, l) => s + hitungHargaLine(l), 0);
-  const biayaAdmin = hitungBiayaAdmin(metode, subtotal);
-  const total = subtotal + biayaAdmin;
 
   async function konfirmasiPesanan() {
     if (lines.length === 0 || !jamAmbil) return;
@@ -133,57 +135,31 @@ function IsiKeranjang({ user }: { user: { uid: string; displayName: string | nul
         namaCustomer: user.displayName,
         noHpCustomer: noHp.trim(),
         items,
-        totalHarga: total,
+        totalHarga: subtotal,
         jamAmbil,
-        metodePembayaran: metode === "qris" ? "qris" : "virtual_account",
-        biayaAdmin,
       });
 
-      // Minta token pembayaran ke server (server yang hubungi Midtrans)
+      // Minta server hitung ulang harga (jangan percaya harga dari browser)
+      // dan tetapkan kode unik transfer untuk pesanan ini.
       const res = await fetch("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          orderId,
-          items,
-          total: subtotal,
-          biayaAdmin,
-          metode,
-          namaCustomer: user.displayName,
-        }),
+        body: JSON.stringify({ orderId, items }),
       });
       const data = await res.json();
 
-      if (!res.ok || !data.token) {
+      if (!res.ok || typeof data.kodeUnik !== "number") {
         const detail = typeof data.error === "string" ? data.error : JSON.stringify(data.error);
-        setError(`Gagal menyiapkan pembayaran: ${detail || "coba lagi."}`);
+        setError(`Gagal menyiapkan pesanan: ${detail || "coba lagi."}`);
         setMengirim(false);
         return;
       }
 
-      await loadSnapScript();
-
-      window.snap?.pay(data.token, {
-        onSuccess: async () => {
-          await updateStatusPesanan(orderId, "dibayar");
-          kosongkanKeranjang();
-          router.push("/pesanan");
-        },
-        onPending: async () => {
-          // Untuk VA: pembayaran belum masuk, customer masih perlu transfer.
-          kosongkanKeranjang();
-          router.push("/pesanan");
-        },
-        onError: () => {
-          setError("Pembayaran gagal. Silakan coba lagi.");
-          setMengirim(false);
-        },
-        onClose: () => {
-          setError(
-            "Pop-up ditutup sebelum pembayaran selesai. Pesanan tetap tersimpan, buka kembali dari riwayat untuk lanjut bayar."
-          );
-          setMengirim(false);
-        },
+      kosongkanKeranjang();
+      setOrderBayar({
+        id: orderId,
+        kodeUnik: data.kodeUnik,
+        totalTransfer: data.totalTransfer,
       });
     } catch (e) {
       setError("Gagal membuat pesanan. Coba lagi.");
@@ -191,31 +167,8 @@ function IsiKeranjang({ user }: { user: { uid: string; displayName: string | nul
     }
   }
 
-  if (sukses) {
-    return (
-      <main>
-        <header className="app-header">
-          <h1>Pesanan Diterima 🎉</h1>
-          <p className="subtitle">
-            Nomor pesanan kamu: <strong>{sukses.slice(0, 8).toUpperCase()}</strong>
-          </p>
-        </header>
-        <section className="kategori-section">
-          <p style={{ color: "var(--color-ink-soft)", fontSize: 13.5 }}>
-            Kalau kamu bayar pakai Virtual Account, selesaikan transfer sesuai
-            nomor VA yang muncul di pop-up tadi. Kalau QRIS, pesanan langsung
-            diproses begitu pembayaran terkonfirmasi.
-          </p>
-          <button
-            className="checkout-submit"
-            onClick={() => router.push("/")}
-            style={{ marginTop: 16 }}
-          >
-            Kembali ke Menu
-          </button>
-        </section>
-      </main>
-    );
+  if (orderBayar) {
+    return <HalamanBayarManual orderBayar={orderBayar} onSelesai={() => router.push("/pesanan")} />;
   }
 
   return (
@@ -293,42 +246,17 @@ function IsiKeranjang({ user }: { user: { uid: string; displayName: string | nul
             </p>
 
             <div className="modal-group-title" style={{ marginTop: 20 }}>
-              Metode Pembayaran
+              Pembayaran
             </div>
-            {(["qris", "va"] as MetodeBayar[]).map((m) => (
-              <label
-                key={m}
-                className={`modal-opsi ${metode === m ? "dipilih" : ""}`}
-              >
-                <span>
-                  {labelMetode(m)}
-                  <br />
-                  <small style={{ color: "var(--color-ink-soft)", fontWeight: 400 }}>
-                    Biaya admin: {formatRupiah(hitungBiayaAdmin(m, subtotal))}
-                  </small>
-                </span>
-                <input
-                  type="radio"
-                  checked={metode === m}
-                  onChange={() => setMetode(m)}
-                />
-              </label>
-            ))}
-
-            <div style={{ marginTop: 14, fontSize: 13.5 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
-                <span style={{ color: "var(--color-ink-soft)" }}>Subtotal</span>
-                <span>{formatRupiah(subtotal)}</span>
-              </div>
-              <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <span style={{ color: "var(--color-ink-soft)" }}>Biaya admin</span>
-                <span>{formatRupiah(biayaAdmin)}</span>
-              </div>
-            </div>
+            <p style={{ fontSize: 13, color: "var(--color-ink-soft)" }}>
+              Transfer manual ke rekening BRI lewat QRIS. Setelah pesanan
+              dibuat, kamu akan dapat kode unik & QRIS buat transfer, lalu
+              upload bukti transfernya di sini.
+            </p>
 
             <div className="cart-total-row">
               <span>Total Bayar</span>
-              <span>{formatRupiah(total)}</span>
+              <span>{formatRupiah(subtotal)}</span>
             </div>
 
             <div className="modal-group-title">Jam Ambil</div>
@@ -355,10 +283,160 @@ function IsiKeranjang({ user }: { user: { uid: string; displayName: string | nul
               disabled={mengirim}
               onClick={konfirmasiPesanan}
             >
-              {mengirim ? "Memproses…" : `Konfirmasi Pesanan · ${formatRupiah(total)}`}
+              {mengirim ? "Memproses…" : `Konfirmasi Pesanan · ${formatRupiah(subtotal)}`}
             </button>
           </>
         )}
+      </section>
+    </main>
+  );
+}
+
+function HalamanBayarManual({
+  orderBayar,
+  onSelesai,
+}: {
+  orderBayar: OrderBayar;
+  onSelesai: () => void;
+}) {
+  const [file, setFile] = useState<File | null>(null);
+  const [mengunggah, setMengunggah] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [sukses, setSukses] = useState(false);
+
+  async function kirimBukti() {
+    if (!file) {
+      setError("Pilih dulu foto/screenshot bukti transfernya.");
+      return;
+    }
+    setError(null);
+    setMengunggah(true);
+    try {
+      await simpanBuktiTransfer(orderBayar.id, file);
+      setSukses(true);
+    } catch (e) {
+      setError("Gagal mengunggah bukti transfer. Coba lagi.");
+    } finally {
+      setMengunggah(false);
+    }
+  }
+
+  if (sukses) {
+    return (
+      <main>
+        <header className="app-header">
+          <h1>Bukti Terkirim 🎉</h1>
+          <p className="subtitle">
+            Nomor pesanan kamu: <strong>{orderBayar.id.slice(0, 8).toUpperCase()}</strong>
+          </p>
+        </header>
+        <section className="kategori-section">
+          <p style={{ color: "var(--color-ink-soft)", fontSize: 13.5 }}>
+            Bukti transfer sudah kami terima. Tunggu sebentar, outlet akan
+            verifikasi pembayaran secara manual lalu mulai siapkan pesananmu.
+          </p>
+          <button className="checkout-submit" onClick={onSelesai} style={{ marginTop: 16 }}>
+            Lihat Pesanan Saya
+          </button>
+        </section>
+      </main>
+    );
+  }
+
+  return (
+    <main>
+      <header className="app-header">
+        <h1>Selesaikan Pembayaran</h1>
+        <p className="subtitle">
+          Nomor pesanan: <strong>{orderBayar.id.slice(0, 8).toUpperCase()}</strong>
+        </p>
+      </header>
+
+      <section className="kategori-section">
+        <div
+          style={{
+            background: "var(--color-card)",
+            borderRadius: "var(--radius-lg)",
+            padding: 16,
+            boxShadow: "var(--shadow-card)",
+            textAlign: "center",
+          }}
+        >
+          <img
+            src={QRIS_IMAGE_PATH}
+            alt="QRIS Pembayaran"
+            style={{ maxWidth: 260, width: "100%", margin: "0 auto" }}
+          />
+          <p style={{ fontSize: 12, color: "var(--color-ink-soft)", marginTop: 8 }}>
+            Atau transfer manual ke rekening BRI
+            <br />
+            <strong>{REKENING_BRI.nomor}</strong> a.n. {REKENING_BRI.atasNama}
+          </p>
+        </div>
+
+        <div
+          style={{
+            marginTop: 14,
+            background: "var(--color-accent-soft)",
+            borderRadius: "var(--radius-lg)",
+            padding: 16,
+            textAlign: "center",
+          }}
+        >
+          <div style={{ fontSize: 12, color: "var(--color-ink-soft)" }}>
+            Transfer PAS sejumlah (termasuk kode unik)
+          </div>
+          <div style={{ fontSize: 26, fontWeight: 800, color: "var(--color-accent)" }}>
+            {formatRupiah(orderBayar.totalTransfer)}
+          </div>
+          <div style={{ fontSize: 12.5, color: "var(--color-ink-soft)", marginTop: 4 }}>
+            Kode unik pesanan ini: <strong>{orderBayar.kodeUnik}</strong>
+          </div>
+        </div>
+
+        <p style={{ fontSize: 12.5, color: "var(--color-ink-soft)", marginTop: 10 }}>
+          Penting: transfer harus PAS sesuai nominal di atas (sampai 3 digit
+          terakhir) supaya verifikasi lebih cepat.
+        </p>
+
+        <div className="modal-group-title" style={{ marginTop: 20 }}>
+          Upload Bukti Transfer
+        </div>
+        <label
+          style={{
+            display: "block",
+            border: "1.5px dashed var(--color-line)",
+            borderRadius: "var(--radius-lg)",
+            padding: 16,
+            textAlign: "center",
+            fontSize: 13.5,
+            color: "var(--color-ink-soft)",
+            cursor: "pointer",
+          }}
+        >
+          {file ? file.name : "Ketuk untuk pilih foto/screenshot bukti transfer"}
+          <input
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+            style={{ display: "none" }}
+          />
+        </label>
+
+        {error && (
+          <p style={{ color: "var(--color-accent)", fontSize: 13, marginTop: 8 }}>
+            {error}
+          </p>
+        )}
+
+        <button
+          className="checkout-submit"
+          disabled={mengunggah}
+          onClick={kirimBukti}
+        >
+          {mengunggah ? "Mengunggah…" : "Kirim Bukti Transfer"}
+        </button>
       </section>
     </main>
   );

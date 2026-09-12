@@ -43,6 +43,7 @@ export type OrderItem = {
 
 export type OrderStatus =
   | "menunggu_pembayaran"
+  | "menunggu_verifikasi"
   | "dibayar"
   | "sedang_disiapkan"
   | "siap_diambil"
@@ -56,11 +57,16 @@ export type Order = {
   noHpCustomer?: string;
   items: OrderItem[];
   totalHarga: number;
-  biayaAdmin?: number;
+  // Kode unik (100-999) ditambahkan ke totalHarga supaya nominal transfer tiap
+  // pesanan beda-beda dan gampang dicocokkan manual di mutasi rekening.
+  kodeUnik?: number;
+  // totalHarga + kodeUnik -- ini nominal PAS yang wajib ditransfer customer.
+  totalTransfer?: number;
+  buktiTransferUrl?: string;
+  buktiTransferUploadedAt?: string;
   jamAmbil: string; // ISO datetime
   status: OrderStatus;
-  metodePembayaran?: "qris" | "virtual_account";
-  midtransOrderId?: string;
+  metodePembayaran?: "transfer_manual";
   createdAt: string; // ISO datetime
 };
 

@@ -4,7 +4,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import LoginGate from "@/components/LoginGate";
 import AdminGuard from "@/components/AdminGuard";
-import { dengarkanSemuaPesanan, updateStatusPesanan } from "@/lib/orderService";
+import {
+  dengarkanSemuaPesanan,
+  updateStatusPesanan,
+  verifikasiPembayaran,
+  tolakBuktiTransfer,
+} from "@/lib/orderService";
 import { LABEL_STATUS, STATUS_BERIKUTNYA, kodePesanan } from "@/lib/orderLabels";
 import { IkonLonceng, IkonJamPasir } from "@/components/DoodleIcons";
 import { formatTanggalRelatif } from "@/lib/formatTanggal";
@@ -142,7 +147,7 @@ function bunyikanBip() {
 function IsiPesanan() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [memuat, setMemuat] = useState(true);
-  const [filter, setFilter] = useState<OrderStatus>("dibayar");
+  const [filter, setFilter] = useState<OrderStatus>("menunggu_verifikasi");
   const [alarmAktif, setAlarmAktif] = useState(false);
   const [konfirmasi, setKonfirmasi] = useState<{ order: Order; statusBaru: OrderStatus } | null>(
     null
@@ -152,21 +157,21 @@ function IsiPesanan() {
 
   useEffect(() => {
     const unsubscribe = dengarkanSemuaPesanan((data) => {
-      const idDibayarSekarang = new Set(
-        data.filter((o) => o.status === "dibayar").map((o) => o.id)
+      const idPerluVerifikasiSekarang = new Set(
+        data.filter((o) => o.status === "menunggu_verifikasi").map((o) => o.id)
       );
 
       if (idSudahDilihat.current === null) {
         // Pertama kali load, jangan bunyikan alarm buat pesanan yang sudah ada dari awal
-        idSudahDilihat.current = idDibayarSekarang;
+        idSudahDilihat.current = idPerluVerifikasiSekarang;
       } else {
-        const adaPesananBaru = [...idDibayarSekarang].some(
+        const adaPesananBaru = [...idPerluVerifikasiSekarang].some(
           (id) => !idSudahDilihat.current!.has(id)
         );
         if (adaPesananBaru) {
           setAlarmAktif(true);
         }
-        idSudahDilihat.current = idDibayarSekarang;
+        idSudahDilihat.current = idPerluVerifikasiSekarang;
       }
 
       setOrders(data);
@@ -200,7 +205,8 @@ function IsiPesanan() {
       (o) =>
         new Date(o.createdAt).toDateString() === hariIni &&
         o.status !== "dibatalkan" &&
-        o.status !== "menunggu_pembayaran"
+        o.status !== "menunggu_pembayaran" &&
+        o.status !== "menunggu_verifikasi"
     );
     return {
       jumlahPesanan: punyaHariIni.length,
@@ -220,6 +226,7 @@ function IsiPesanan() {
   const ordersTampil = orders.filter((o) => o.status === filter);
 
   const tabList: { key: OrderStatus; label: string }[] = [
+    { key: "menunggu_verifikasi", label: "Perlu Verifikasi" },
     { key: "dibayar", label: "Pesanan Masuk" },
     { key: "sedang_disiapkan", label: "Disiapkan" },
     { key: "siap_diambil", label: "Siap Diambil" },
@@ -348,12 +355,76 @@ function IsiPesanan() {
                 </div>
               ))}
 
+              {order.status === "menunggu_verifikasi" && (
+                <div
+                  style={{
+                    background: "var(--color-accent-soft)",
+                    borderRadius: "var(--radius-lg)",
+                    padding: 12,
+                    marginTop: 8,
+                  }}
+                >
+                  <div style={{ fontSize: 12.5, color: "var(--color-ink-soft)" }}>
+                    Seharusnya masuk sejumlah
+                  </div>
+                  <div style={{ fontSize: 18, fontWeight: 800 }}>
+                    {formatRupiah(order.totalTransfer ?? order.totalHarga)}
+                    {" "}
+                    <span style={{ fontSize: 13, fontWeight: 700, color: "var(--color-accent)" }}>
+                      (kode {order.kodeUnik})
+                    </span>
+                  </div>
+                  {order.buktiTransferUrl && (
+                    <a href={order.buktiTransferUrl} target="_blank" rel="noopener noreferrer">
+                      <img
+                        src={order.buktiTransferUrl}
+                        alt="Bukti transfer"
+                        style={{
+                          marginTop: 8,
+                          width: "100%",
+                          maxHeight: 260,
+                          objectFit: "contain",
+                          borderRadius: 8,
+                          background: "#fff",
+                        }}
+                      />
+                    </a>
+                  )}
+                </div>
+              )}
+
               {order.status !== "selesai" && order.status !== "dibatalkan" && (
                 <CountdownJamAmbil jamAmbil={order.jamAmbil} />
               )}
 
               <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
-                {statusBerikutnya && (
+                {order.status === "menunggu_verifikasi" && (
+                  <>
+                    <button
+                      className="tambah-btn-lebar"
+                      style={{ padding: "8px 14px", fontSize: 13 }}
+                      onClick={() => verifikasiPembayaran(order.id)}
+                    >
+                      Verifikasi & Terima
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (confirm(`Tolak bukti transfer pesanan ${kodePesanan(order)}? Customer perlu upload ulang.`)) {
+                          tolakBuktiTransfer(order.id);
+                        }
+                      }}
+                      style={{
+                        ...linkBtnStyle,
+                        border: "1px solid var(--color-line)",
+                        borderRadius: 999,
+                        padding: "8px 14px",
+                      }}
+                    >
+                      Tolak Bukti
+                    </button>
+                  </>
+                )}
+                {statusBerikutnya && order.status !== "menunggu_verifikasi" && (
                   <button
                     className="tambah-btn-lebar"
                     style={{ padding: "8px 14px", fontSize: 13 }}

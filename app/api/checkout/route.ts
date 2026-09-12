@@ -1,14 +1,17 @@
-// API route ini jalan di server (bukan di browser), supaya Server Key
-// Midtrans tidak pernah terekspos ke customer.
+// API route ini jalan di server (bukan di browser).
 //
 // PENTING (keamanan): route ini TIDAK PERNAH memercayai harga yang dikirim
 // dari browser. Semua harga dihitung ulang dari data menu asli di Firestore,
 // supaya customer tidak bisa mengubah harga lewat developer tools/manipulasi
 // request. Hasil hitungan ulang ini juga dipakai buat memperbaiki data
 // pesanan yang tersimpan, jadi admin selalu lihat harga yang benar.
+//
+// Route ini juga yang menentukan kode unik (100-999) tiap pesanan, supaya
+// nominal transfer manual tiap pesanan beda-beda dan gampang dicocokkan
+// manual di mutasi rekening BRI.
 
 import { getAdminDb } from "@/lib/firebaseAdmin";
-import { hitungBiayaAdmin, type MetodeBayar } from "@/lib/biayaAdmin";
+import { buatKodeUnik } from "@/lib/kodeUnik";
 import type { OrderItem } from "@/lib/types";
 
 type ItemMasuk = {
@@ -24,17 +27,7 @@ export async function POST(req: Request) {
     const body = (await req.json()) as {
       orderId: string;
       items: ItemMasuk[];
-      namaCustomer: string | null;
-      metode: MetodeBayar;
     };
-
-    const serverKey = process.env.MIDTRANS_SERVER_KEY;
-    if (!serverKey) {
-      return Response.json(
-        { error: "MIDTRANS_SERVER_KEY belum diatur di Environment Variables." },
-        { status: 500 }
-      );
-    }
 
     const db = getAdminDb();
 
@@ -86,73 +79,23 @@ export async function POST(req: Request) {
       });
     }
 
-    const biayaAdmin = hitungBiayaAdmin(body.metode, subtotal);
-    const grossAmount = subtotal + biayaAdmin;
+    const kodeUnik = await buatKodeUnik(db, body.orderId);
+    const totalTransfer = subtotal + kodeUnik;
 
     // Perbaiki data pesanan yang tersimpan supaya sesuai harga asli --
-    // menimpa apa pun yang mungkin sempat dimanipulasi dari sisi client
+    // menimpa apa pun yang mungkin sempat dimanipulasi dari sisi client --
+    // dan sekaligus tetapkan kode unik & nominal transfer PAS-nya.
     await db.collection("orders").doc(body.orderId).update({
       items: itemsTerverifikasi,
       totalHarga: subtotal,
-      biayaAdmin,
+      kodeUnik,
+      totalTransfer,
+      metodePembayaran: "transfer_manual",
     });
 
-    const isProduksi = process.env.MIDTRANS_IS_PRODUCTION === "true";
-    const baseUrl = isProduksi
-      ? "https://app.midtrans.com"
-      : "https://app.sandbox.midtrans.com";
-    const authHeader = Buffer.from(`${serverKey}:`).toString("base64");
-
-    const itemDetails = itemsTerverifikasi.map((it) => ({
-      id: it.menuId,
-      price: it.hargaSatuan,
-      quantity: it.qty,
-      name: it.namaMenu.slice(0, 50),
-    }));
-    itemDetails.push({
-      id: "biaya-admin",
-      price: biayaAdmin,
-      quantity: 1,
-      name: "Biaya Admin Pembayaran",
-    });
-
-    const enabledPayments =
-      body.metode === "qris"
-        ? ["qris"]
-        : ["bca_va", "bni_va", "bri_va", "permata_va", "other_va"];
-
-    const payload = {
-      transaction_details: {
-        order_id: body.orderId,
-        gross_amount: grossAmount,
-      },
-      language: "id",
-      item_details: itemDetails,
-      customer_details: {
-        first_name: body.namaCustomer || "Customer",
-      },
-      enabled_payments: enabledPayments,
-    };
-
-    const res = await fetch(`${baseUrl}/snap/v1/transactions`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        Authorization: `Basic ${authHeader}`,
-      },
-      body: JSON.stringify(payload),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      return Response.json({ error: data }, { status: 500 });
-    }
-
-    return Response.json({ token: data.token, redirect_url: data.redirect_url });
+    return Response.json({ totalHarga: subtotal, kodeUnik, totalTransfer });
   } catch (err) {
     const pesan = err instanceof Error ? err.message : "Error tidak diketahui";
-    return Response.json({ error: `Gagal menghubungi Midtrans: ${pesan}` }, { status: 500 });
+    return Response.json({ error: `Gagal memproses pesanan: ${pesan}` }, { status: 500 });
   }
 }

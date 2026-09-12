@@ -1,5 +1,6 @@
 import { collection, addDoc, doc, updateDoc, onSnapshot, query, orderBy, where } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { db, storage } from "@/lib/firebase";
 import type { Order, OrderItem } from "@/lib/types";
 
 export async function buatPesanan(data: {
@@ -9,8 +10,6 @@ export async function buatPesanan(data: {
   items: OrderItem[];
   totalHarga: number;
   jamAmbil: string;
-  metodePembayaran: "qris" | "virtual_account";
-  biayaAdmin: number;
 }) {
   const ref = await addDoc(collection(db, "orders"), {
     uid: data.uid,
@@ -19,8 +18,6 @@ export async function buatPesanan(data: {
     items: data.items,
     totalHarga: data.totalHarga,
     jamAmbil: data.jamAmbil,
-    metodePembayaran: data.metodePembayaran,
-    biayaAdmin: data.biayaAdmin,
     status: "menunggu_pembayaran",
     createdAt: new Date().toISOString(),
   });
@@ -29,6 +26,38 @@ export async function buatPesanan(data: {
 
 export async function updateStatusPesanan(orderId: string, status: string) {
   await updateDoc(doc(db, "orders", orderId), { status });
+}
+
+// Dipanggil setelah customer upload foto bukti transfer. Pesanan pindah ke
+// status "menunggu_verifikasi" supaya muncul di tab khusus admin.
+export async function simpanBuktiTransfer(orderId: string, file: File) {
+  const path = `bukti-transfer/${orderId}-${Date.now()}-${file.name}`;
+  const storageRef = ref(storage, path);
+  await uploadBytes(storageRef, file);
+  const url = await getDownloadURL(storageRef);
+
+  await updateDoc(doc(db, "orders", orderId), {
+    buktiTransferUrl: url,
+    buktiTransferUploadedAt: new Date().toISOString(),
+    status: "menunggu_verifikasi",
+  });
+
+  return url;
+}
+
+// Admin klik "Verifikasi & Terima" -- nominal & bukti sudah dicek manual, cocok.
+export async function verifikasiPembayaran(orderId: string) {
+  await updateStatusPesanan(orderId, "dibayar");
+}
+
+// Admin klik "Tolak Bukti" -- misal fotonya buram atau nominal gak cocok.
+// Pesanan dikembalikan ke "menunggu_pembayaran" supaya customer bisa upload ulang.
+export async function tolakBuktiTransfer(orderId: string) {
+  await updateDoc(doc(db, "orders", orderId), {
+    status: "menunggu_pembayaran",
+    buktiTransferUrl: null,
+    buktiTransferUploadedAt: null,
+  });
 }
 
 export function dengarkanSemuaPesanan(callback: (orders: Order[]) => void) {
