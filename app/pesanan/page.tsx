@@ -7,6 +7,7 @@ import WhatsAppGate from "@/components/WhatsAppGate";
 import Memuat from "@/components/Memuat";
 import { dengarkanPesananSaya } from "@/lib/orderService";
 import { LABEL_STATUS, kodePesanan } from "@/lib/orderLabels";
+import { buatLinkWaAdmin } from "@/lib/kontakConfig";
 import { IkonCentang, IkonLonceng, IkonSilang, IkonJamPasir, IkonPiring } from "@/components/DoodleIcons";
 import { formatTanggalRelatif } from "@/lib/formatTanggal";
 import type { Order } from "@/lib/types";
@@ -215,6 +216,26 @@ function IsiPesananSaya({ uid }: { uid: string }) {
                   )}
                 </div>
               ))}
+
+              <a
+                href={buatLinkWaAdmin(order)}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: "block",
+                  textAlign: "center",
+                  marginTop: 10,
+                  padding: "9px 14px",
+                  borderRadius: "var(--radius-full)",
+                  border: "1.5px solid var(--color-ink)",
+                  color: "var(--color-ink)",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  textDecoration: "none",
+                }}
+              >
+                💬 Hubungi Admin (WA)
+              </a>
             </div>
           );
         })}
