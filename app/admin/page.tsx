@@ -227,6 +227,7 @@ function IsiPesanan() {
   const ordersTampil = orders.filter((o) => o.status === filter);
 
   const tabList: { key: OrderStatus; label: string }[] = [
+    { key: "menunggu_pembayaran", label: "Menunggu Pembayaran" },
     { key: "menunggu_verifikasi", label: "Perlu Verifikasi" },
     { key: "dibayar", label: "Pesanan Masuk" },
     { key: "sedang_disiapkan", label: "Disiapkan" },
@@ -356,7 +357,8 @@ function IsiPesanan() {
                 </div>
               ))}
 
-              {order.status === "menunggu_verifikasi" && (
+              {(order.status === "menunggu_verifikasi" ||
+                order.status === "menunggu_pembayaran") && (
                 <div
                   style={{
                     background: "var(--color-accent-soft)",
@@ -375,7 +377,7 @@ function IsiPesanan() {
                       (kode {order.kodeUnik})
                     </span>
                   </div>
-                  {order.buktiTransferUrl && (
+                  {order.buktiTransferUrl ? (
                     <a href={order.buktiTransferUrl} target="_blank" rel="noopener noreferrer">
                       <img
                         src={order.buktiTransferUrl}
@@ -390,6 +392,14 @@ function IsiPesanan() {
                         }}
                       />
                     </a>
+                  ) : (
+                    order.status === "menunggu_pembayaran" && (
+                      <div style={{ fontSize: 12, color: "var(--color-ink-soft)", marginTop: 6 }}>
+                        Belum ada bukti transfer diupload. Kalau customer bilang
+                        sudah transfer lewat WA, cek mutasi manual lalu klik
+                        &quot;Tandai: Sudah Dibayar&quot; di bawah.
+                      </div>
+                    )
                   )}
                 </div>
               )}

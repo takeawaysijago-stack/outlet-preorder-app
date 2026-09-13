@@ -5,7 +5,9 @@ import Link from "next/link";
 import LoginGate from "@/components/LoginGate";
 import WhatsAppGate from "@/components/WhatsAppGate";
 import Memuat from "@/components/Memuat";
-import { dengarkanPesananSaya } from "@/lib/orderService";
+import { dengarkanPesananSaya, simpanBuktiTransfer } from "@/lib/orderService";
+import { kompresGambarKeBase64 } from "@/lib/gambar";
+import { QRIS_IMAGE_PATH } from "@/lib/pembayaranConfig";
 import { LABEL_STATUS, kodePesanan } from "@/lib/orderLabels";
 import { buatLinkWaAdmin } from "@/lib/kontakConfig";
 import { IkonCentang, IkonLonceng, IkonSilang, IkonJamPasir, IkonPiring } from "@/components/DoodleIcons";
@@ -236,6 +238,10 @@ function IsiPesananSaya({ uid }: { uid: string }) {
                     >
                       {disalinId === order.id ? "✓ Tersalin!" : "📋 Salin Nominal"}
                     </button>
+
+                    {order.status === "menunggu_pembayaran" && (
+                      <UploadBuktiInline orderId={order.id} />
+                    )}
                   </div>
                 )}
 
@@ -287,5 +293,104 @@ function IsiPesananSaya({ uid }: { uid: string }) {
         })}
       </section>
     </main>
+  );
+}
+
+// Buat customer yang sempat keluar dari layar bayar sebelum sempat upload
+// bukti transfer -- di kartu "Pesanan Saya", mereka bisa upload dari sini
+// tanpa harus checkout ulang atau kehilangan pesanannya.
+function UploadBuktiInline({ orderId }: { orderId: string }) {
+  const [buka, setBuka] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [mengunggah, setMengunggah] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function kirim() {
+    if (!file) {
+      setError("Pilih dulu foto/screenshot bukti transfernya.");
+      return;
+    }
+    setError(null);
+    setMengunggah(true);
+    try {
+      const base64 = await kompresGambarKeBase64(file);
+      await simpanBuktiTransfer(orderId, base64);
+      // Setelah berhasil, status pesanan otomatis pindah ke
+      // "menunggu_verifikasi" lewat listener realtime -- kartu ini akan
+      // otomatis berubah tampilan tanpa perlu di-refresh manual.
+    } catch (e) {
+      const pesan =
+        e instanceof Error ? e.message : "Gagal menyimpan bukti transfer. Coba lagi.";
+      setError(pesan);
+    } finally {
+      setMengunggah(false);
+    }
+  }
+
+  if (!buka) {
+    return (
+      <button
+        onClick={() => setBuka(true)}
+        style={{
+          marginTop: 8,
+          width: "100%",
+          padding: "9px 14px",
+          borderRadius: "var(--radius-full)",
+          border: "2px solid var(--color-ink)",
+          background: "var(--color-card)",
+          color: "var(--color-ink)",
+          fontSize: 12.5,
+          fontWeight: 700,
+          cursor: "pointer",
+        }}
+      >
+        📷 Belum Upload Bukti? Upload Sekarang
+      </button>
+    );
+  }
+
+  return (
+    <div style={{ marginTop: 10, textAlign: "left" }}>
+      <img
+        src={QRIS_IMAGE_PATH}
+        alt="QRIS Pembayaran"
+        style={{ maxWidth: 180, width: "100%", margin: "0 auto 10px", display: "block" }}
+      />
+      <label
+        style={{
+          display: "block",
+          background: "var(--color-card)",
+          border: "2px dashed var(--color-accent)",
+          borderRadius: "var(--radius-md)",
+          padding: 14,
+          textAlign: "center",
+          fontSize: 12.5,
+          fontWeight: 600,
+          color: "var(--color-ink)",
+          cursor: "pointer",
+        }}
+      >
+        {file ? `📎 ${file.name}` : "📷 Ketuk untuk pilih foto/screenshot bukti transfer"}
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+          style={{ display: "none" }}
+        />
+      </label>
+
+      {error && (
+        <p style={{ color: "var(--color-accent)", fontSize: 12.5, marginTop: 6 }}>{error}</p>
+      )}
+
+      <button
+        onClick={kirim}
+        disabled={mengunggah}
+        className="checkout-submit"
+        style={{ marginTop: 8 }}
+      >
+        {mengunggah ? "Mengunggah…" : "Kirim Bukti Transfer"}
+      </button>
+    </div>
   );
 }

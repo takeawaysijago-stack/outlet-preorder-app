@@ -17,6 +17,7 @@ export const LABEL_STATUS: Record<OrderStatus, string> = {
 
 // Urutan status berikutnya kalau admin klik "Proses Selanjutnya"
 export const STATUS_BERIKUTNYA: Partial<Record<OrderStatus, OrderStatus>> = {
+  menunggu_pembayaran: "dibayar",
   menunggu_verifikasi: "dibayar",
   dibayar: "sedang_disiapkan",
   sedang_disiapkan: "siap_diambil",
