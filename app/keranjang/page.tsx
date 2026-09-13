@@ -303,6 +303,20 @@ function HalamanBayarManual({
   const [mengunggah, setMengunggah] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sukses, setSukses] = useState(false);
+  const [tersalin, setTersalin] = useState(false);
+
+  const totalDasar = orderBayar.totalTransfer - orderBayar.kodeUnik;
+
+  async function salinNominal() {
+    try {
+      await navigator.clipboard.writeText(String(orderBayar.totalTransfer));
+      setTersalin(true);
+      setTimeout(() => setTersalin(false), 2500);
+    } catch {
+      // Kalau browser tidak izinkan akses clipboard, biarkan saja --
+      // customer masih bisa ketik manual lihat angkanya di layar.
+    }
+  }
 
   async function kirimBukti() {
     if (!file) {
@@ -393,26 +407,68 @@ function HalamanBayarManual({
           style={{
             marginTop: 14,
             background: "var(--color-accent-soft)",
+            border: "2px solid var(--color-accent)",
             borderRadius: "var(--radius-lg)",
             padding: 16,
             textAlign: "center",
           }}
         >
-          <div style={{ fontSize: 12, color: "var(--color-ink-soft)" }}>
-            Transfer PAS sejumlah (termasuk kode unik)
+          <div style={{ fontSize: 12, color: "var(--color-ink-soft)", fontWeight: 600 }}>
+            TRANSFER PAS, JANGAN DIBULATKAN
           </div>
-          <div style={{ fontSize: 26, fontWeight: 800, color: "var(--color-accent)" }}>
+          <div style={{ marginTop: 8, display: "flex", alignItems: "baseline", justifyContent: "center", gap: 6, flexWrap: "wrap" }}>
+            <span style={{ fontSize: 19, fontWeight: 700, color: "var(--color-ink)" }}>
+              {formatRupiah(totalDasar)}
+            </span>
+            <span style={{ fontSize: 16, fontWeight: 700, color: "var(--color-ink-soft)" }}>+</span>
+            <span style={{ fontSize: 30, fontWeight: 900, color: "var(--color-accent)" }}>
+              {orderBayar.kodeUnik}
+            </span>
+          </div>
+          <div style={{ fontSize: 11.5, color: "var(--color-ink-soft)", marginTop: 2 }}>
+            (angka merah = kode unik, wajib ikut ditransfer)
+          </div>
+          <div style={{ marginTop: 10, fontSize: 14, fontWeight: 700, color: "var(--color-ink)" }}>
+            = Total PAS yang harus ditransfer:
+          </div>
+          <div style={{ fontSize: 24, fontWeight: 900, color: "var(--color-accent)" }}>
             {formatRupiah(orderBayar.totalTransfer)}
           </div>
-          <div style={{ fontSize: 12.5, color: "var(--color-ink-soft)", marginTop: 4 }}>
-            Kode unik pesanan ini: <strong>{orderBayar.kodeUnik}</strong>
-          </div>
+
+          <button
+            onClick={salinNominal}
+            style={{
+              marginTop: 12,
+              padding: "8px 16px",
+              borderRadius: "var(--radius-full)",
+              border: "1.5px solid var(--color-ink)",
+              background: tersalin ? "var(--color-ink)" : "var(--color-card)",
+              color: tersalin ? "var(--color-card)" : "var(--color-ink)",
+              fontSize: 13,
+              fontWeight: 700,
+              cursor: "pointer",
+            }}
+          >
+            {tersalin ? "✓ Tersalin!" : `📋 Salin Nominal: ${formatRupiah(orderBayar.totalTransfer)}`}
+          </button>
         </div>
 
-        <p style={{ fontSize: 12.5, color: "var(--color-ink-soft)", marginTop: 10 }}>
-          Penting: transfer harus PAS sesuai nominal di atas (sampai 3 digit
-          terakhir) supaya verifikasi lebih cepat.
-        </p>
+        <div
+          style={{
+            marginTop: 10,
+            background: "#fff3cd",
+            border: "1.5px solid #f0ad4e",
+            borderRadius: "var(--radius-md)",
+            padding: "10px 12px",
+            fontSize: 12.5,
+            color: "#6b4a00",
+          }}
+        >
+          ⚠️ <strong>Jangan transfer {formatRupiah(totalDasar)} bulat.</strong> Wajib
+          PAS <strong>{formatRupiah(orderBayar.totalTransfer)}</strong> (pakai
+          tombol salin di atas biar gak salah ketik), atau verifikasi
+          pesananmu bisa lebih lama.
+        </div>
 
         <div className="modal-group-title" style={{ marginTop: 20 }}>
           Upload Bukti Transfer

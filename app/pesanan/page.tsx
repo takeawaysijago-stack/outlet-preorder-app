@@ -111,6 +111,17 @@ export default function HalamanPesananSaya() {
 function IsiPesananSaya({ uid }: { uid: string }) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [memuat, setMemuat] = useState(true);
+  const [disalinId, setDisalinId] = useState<string | null>(null);
+
+  async function salinNominal(order: Order) {
+    try {
+      await navigator.clipboard.writeText(String(order.totalTransfer ?? order.totalHarga));
+      setDisalinId(order.id);
+      setTimeout(() => setDisalinId((id) => (id === order.id ? null : id)), 2500);
+    } catch {
+      // Kalau clipboard tidak diizinkan browser, biarkan -- masih bisa lihat angkanya manual.
+    }
+  }
 
   useEffect(() => {
     const unsubscribe = dengarkanPesananSaya(uid, (data) => {
@@ -171,25 +182,60 @@ function IsiPesananSaya({ uid }: { uid: string }) {
 
               {(order.status === "menunggu_pembayaran" ||
                 order.status === "menunggu_verifikasi") &&
-                order.kodeUnik != null && (
+                order.kodeUnik != null &&
+                order.totalTransfer != null && (
                   <div
                     style={{
                       background: "var(--color-accent-soft)",
+                      border: "2px solid var(--color-accent)",
                       borderRadius: "var(--radius-md)",
                       padding: "10px 12px",
                       marginTop: 8,
                       marginBottom: 4,
+                      textAlign: "center",
                     }}
                   >
-                    <div style={{ fontSize: 11.5, color: "var(--color-ink-soft)" }}>
-                      Transfer PAS sejumlah
+                    <div style={{ fontSize: 11, color: "var(--color-ink-soft)", fontWeight: 600 }}>
+                      TRANSFER PAS, JANGAN DIBULATKAN
                     </div>
-                    <div style={{ fontSize: 17, fontWeight: 800 }}>
-                      {formatRupiah(order.totalTransfer ?? order.totalHarga)}{" "}
-                      <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--color-accent)" }}>
-                        (kode {order.kodeUnik})
+                    <div
+                      style={{
+                        marginTop: 4,
+                        display: "flex",
+                        alignItems: "baseline",
+                        justifyContent: "center",
+                        gap: 5,
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <span style={{ fontSize: 15, fontWeight: 700 }}>
+                        {formatRupiah(order.totalTransfer - order.kodeUnik)}
+                      </span>
+                      <span style={{ fontSize: 13, color: "var(--color-ink-soft)" }}>+</span>
+                      <span style={{ fontSize: 22, fontWeight: 900, color: "var(--color-accent)" }}>
+                        {order.kodeUnik}
+                      </span>
+                      <span style={{ fontSize: 13, color: "var(--color-ink-soft)" }}>=</span>
+                      <span style={{ fontSize: 17, fontWeight: 900 }}>
+                        {formatRupiah(order.totalTransfer)}
                       </span>
                     </div>
+                    <button
+                      onClick={() => salinNominal(order)}
+                      style={{
+                        marginTop: 8,
+                        padding: "7px 14px",
+                        borderRadius: "var(--radius-full)",
+                        border: "1.5px solid var(--color-ink)",
+                        background: disalinId === order.id ? "var(--color-ink)" : "var(--color-card)",
+                        color: disalinId === order.id ? "var(--color-card)" : "var(--color-ink)",
+                        fontSize: 12.5,
+                        fontWeight: 700,
+                        cursor: "pointer",
+                      }}
+                    >
+                      {disalinId === order.id ? "✓ Tersalin!" : "📋 Salin Nominal"}
+                    </button>
                   </div>
                 )}
 
