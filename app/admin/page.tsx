@@ -8,7 +8,6 @@ import Memuat from "@/components/Memuat";
 import {
   dengarkanSemuaPesanan,
   updateStatusPesanan,
-  verifikasiPembayaran,
   tolakBuktiTransfer,
 } from "@/lib/orderService";
 import { LABEL_STATUS, STATUS_BERIKUTNYA, kodePesanan } from "@/lib/orderLabels";
@@ -414,7 +413,7 @@ function IsiPesanan() {
                     <button
                       className="tambah-btn-lebar"
                       style={{ padding: "8px 14px", fontSize: 13 }}
-                      onClick={() => verifikasiPembayaran(order.id)}
+                      onClick={() => setKonfirmasi({ order, statusBaru: "dibayar" })}
                     >
                       Verifikasi & Terima
                     </button>
@@ -478,7 +477,7 @@ function IsiPesanan() {
                 </button>
                 {order.status !== "selesai" && order.status !== "dibatalkan" && (
                   <button
-                    onClick={() => updateStatusPesanan(order.id, "dibatalkan")}
+                    onClick={() => setKonfirmasi({ order, statusBaru: "dibatalkan" })}
                     style={{
                       ...linkBtnStyle,
                       border: "1px solid var(--color-line)",
@@ -499,11 +498,23 @@ function IsiPesanan() {
         <div className="modal-overlay" onClick={() => setKonfirmasi(null)}>
           <div className="modal-sheet" onClick={(e) => e.stopPropagation()}>
             <div className="modal-handle" />
-            <h2>Konfirmasi Status</h2>
+            <h2>
+              {konfirmasi.statusBaru === "dibatalkan" ? "Batalkan Pesanan?" : "Konfirmasi Status"}
+            </h2>
             <p style={{ fontSize: 13.5, color: "var(--color-ink-soft)", marginTop: 6 }}>
-              Yakin ubah pesanan{" "}
-              <strong>{kodePesanan(konfirmasi.order)}</strong> jadi{" "}
-              <strong>{LABEL_STATUS[konfirmasi.statusBaru]}</strong>?
+              {konfirmasi.statusBaru === "dibatalkan" ? (
+                <>
+                  Yakin batalkan pesanan{" "}
+                  <strong>{kodePesanan(konfirmasi.order)}</strong>? Tindakan ini
+                  gak bisa dibalikin lagi.
+                </>
+              ) : (
+                <>
+                  Yakin ubah pesanan{" "}
+                  <strong>{kodePesanan(konfirmasi.order)}</strong> jadi{" "}
+                  <strong>{LABEL_STATUS[konfirmasi.statusBaru]}</strong>?
+                </>
+              )}
             </p>
 
             <div className="modal-group">
@@ -537,13 +548,18 @@ function IsiPesanan() {
               </button>
               <button
                 className="modal-submit"
-                style={{ flex: 1, marginTop: 0 }}
+                style={{
+                  flex: 1,
+                  marginTop: 0,
+                  background:
+                    konfirmasi.statusBaru === "dibatalkan" ? "var(--color-accent)" : undefined,
+                }}
                 onClick={() => {
                   updateStatusPesanan(konfirmasi.order.id, konfirmasi.statusBaru);
                   setKonfirmasi(null);
                 }}
               >
-                Ya, Yakin
+                {konfirmasi.statusBaru === "dibatalkan" ? "Ya, Batalkan" : "Ya, Yakin"}
               </button>
             </div>
           </div>
