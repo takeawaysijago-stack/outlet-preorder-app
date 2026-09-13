@@ -129,7 +129,7 @@ export default function AddOnModal({
           <div className="modal-group-title">Catatan (opsional)</div>
           <textarea
             className="modal-catatan"
-            placeholder="Contoh: pedas level 2, tanpa bawang"
+            placeholder="Isi catatan kalau perlu"
             value={catatan}
             onChange={(e) => setCatatan(e.target.value)}
           />
