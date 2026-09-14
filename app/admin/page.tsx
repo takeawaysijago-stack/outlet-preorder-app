@@ -133,15 +133,24 @@ export default function HalamanAdmin() {
 function bunyikanBip() {
   try {
     const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.frequency.value = 880;
-    gain.gain.setValueAtTime(0.25, ctx.currentTime);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.25);
-    osc.onended = () => ctx.close();
+    // 3 nada naik (ting-ting-TING!) pakai gelombang square biar lebih
+    // nge-jreng/tajam, bukan bip datar kayak sebelumnya
+    const nada = [660, 880, 1175];
+    let waktu = ctx.currentTime;
+    nada.forEach((freq) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.type = "square";
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.5, waktu);
+      gain.gain.exponentialRampToValueAtTime(0.01, waktu + 0.17);
+      osc.start(waktu);
+      osc.stop(waktu + 0.18);
+      waktu += 0.15;
+    });
+    setTimeout(() => ctx.close(), 700);
   } catch {
     // Browser tidak dukung / belum ada interaksi user -- diamkan saja
   }
@@ -151,11 +160,12 @@ function IsiPesanan() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [memuat, setMemuat] = useState(true);
   const [filter, setFilter] = useState<OrderStatus>("menunggu_verifikasi");
-  const [alarmAktif, setAlarmAktif] = useState(false);
+  const [alarmPesan, setAlarmPesan] = useState<string | null>(null);
   const [konfirmasi, setKonfirmasi] = useState<{ order: Order; statusBaru: OrderStatus } | null>(
     null
   );
   const idSudahDilihat = useRef<Set<string> | null>(null);
+  const idSudahDiingatkanWaktu = useRef<Set<string>>(new Set());
   const intervalAlarm = useRef<ReturnType<typeof setInterval> | null>(null);
   const [jamOps, setJamOps] = useState<OperationalHours>({
     jamMulaiPesan: "09:00",
@@ -169,21 +179,19 @@ function IsiPesanan() {
 
   useEffect(() => {
     const unsubscribe = dengarkanSemuaPesanan((data) => {
-      const idPerluVerifikasiSekarang = new Set(
-        data.filter((o) => o.status === "menunggu_verifikasi").map((o) => o.id)
-      );
+      const idSemuaSekarang = new Set(data.map((o) => o.id));
 
       if (idSudahDilihat.current === null) {
         // Pertama kali load, jangan bunyikan alarm buat pesanan yang sudah ada dari awal
-        idSudahDilihat.current = idPerluVerifikasiSekarang;
+        idSudahDilihat.current = idSemuaSekarang;
       } else {
-        const adaPesananBaru = [...idPerluVerifikasiSekarang].some(
+        const adaPesananBaru = [...idSemuaSekarang].some(
           (id) => !idSudahDilihat.current!.has(id)
         );
         if (adaPesananBaru) {
-          setAlarmAktif(true);
+          setAlarmPesan("Pesanan baru masuk!");
         }
-        idSudahDilihat.current = idPerluVerifikasiSekarang;
+        idSudahDilihat.current = idSemuaSekarang;
       }
 
       setOrders(data);
@@ -192,22 +200,46 @@ function IsiPesanan() {
     return () => unsubscribe();
   }, []);
 
+  // Cek berkala: pesanan yang masih "Sedang Disiapkan" tapi jam ambilnya
+  // udah deket -- biar staf keinget buat buruan siapkan sebelum customer
+  // datang.
   useEffect(() => {
-    if (alarmAktif) {
+    const AMBANG_DETIK = 5 * 60; // ingetin 5 menit sebelum jam ambil
+
+    function cek() {
+      const sekarang = Date.now();
+      for (const o of orders) {
+        if (o.status !== "sedang_disiapkan" || !o.jamAmbil) continue;
+        if (idSudahDiingatkanWaktu.current.has(o.id)) continue;
+        const sisaDetik = (new Date(o.jamAmbil).getTime() - sekarang) / 1000;
+        if (sisaDetik <= AMBANG_DETIK) {
+          idSudahDiingatkanWaktu.current.add(o.id);
+          setAlarmPesan(`Waktu ambil pesanan ${kodePesanan(o)} sudah dekat, segera siapkan!`);
+        }
+      }
+    }
+
+    cek();
+    const interval = setInterval(cek, 20000);
+    return () => clearInterval(interval);
+  }, [orders]);
+
+  useEffect(() => {
+    if (alarmPesan) {
       bunyikanBip();
-      if (navigator.vibrate) navigator.vibrate([300, 150, 300]);
+      if (navigator.vibrate) navigator.vibrate([400, 100, 400, 100, 400]);
       intervalAlarm.current = setInterval(() => {
         bunyikanBip();
-        if (navigator.vibrate) navigator.vibrate([300, 150, 300]);
-      }, 2500);
+        if (navigator.vibrate) navigator.vibrate([400, 100, 400, 100, 400]);
+      }, 1800);
     }
     return () => {
       if (intervalAlarm.current) clearInterval(intervalAlarm.current);
     };
-  }, [alarmAktif]);
+  }, [alarmPesan]);
 
   function matikanAlarm() {
-    setAlarmAktif(false);
+    setAlarmPesan(null);
     if (intervalAlarm.current) clearInterval(intervalAlarm.current);
   }
 
@@ -249,9 +281,9 @@ function IsiPesanan() {
 
   return (
     <main>
-      {alarmAktif && (
+      {alarmPesan && (
         <div className="alarm-banner" onClick={matikanAlarm}>
-          <IkonLonceng size={20} /> Pesanan baru masuk! Tap untuk matikan alarm
+          <IkonLonceng size={20} /> {alarmPesan} Tap untuk matikan alarm
         </div>
       )}
 
