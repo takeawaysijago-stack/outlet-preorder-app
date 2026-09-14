@@ -2,6 +2,19 @@ import { collection, addDoc, doc, updateDoc, onSnapshot, query, orderBy, where }
 import { db } from "@/lib/firebase";
 import type { Order, OrderItem } from "@/lib/types";
 
+export function dengarkanPesanan(
+  orderId: string,
+  callback: (order: Order | null) => void
+) {
+  return onSnapshot(doc(db, "orders", orderId), (snap) => {
+    if (!snap.exists()) {
+      callback(null);
+      return;
+    }
+    callback({ id: snap.id, ...(snap.data() as Omit<Order, "id">) });
+  });
+}
+
 export async function buatPesanan(data: {
   uid: string;
   namaCustomer: string | null;

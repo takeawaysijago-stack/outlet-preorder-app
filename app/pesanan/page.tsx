@@ -193,8 +193,8 @@ function IsiPesananSaya({ uid }: { uid: string }) {
                 order.totalTransfer != null && (
                   <div
                     style={{
-                      background: "var(--color-accent-soft)",
-                      border: "2px solid var(--color-accent)",
+                      background: "var(--color-card)",
+                      border: "2px solid var(--color-ink)",
                       borderRadius: "var(--radius-md)",
                       padding: "10px 12px",
                       marginTop: 8,
@@ -202,30 +202,15 @@ function IsiPesananSaya({ uid }: { uid: string }) {
                       textAlign: "center",
                     }}
                   >
-                    <div style={{ fontSize: 11, color: "var(--color-ink-soft)", fontWeight: 600 }}>
-                      TRANSFER PAS, JANGAN DIBULATKAN
+                    <div style={{ fontSize: 11.5, color: "var(--color-ink-soft)", fontWeight: 600 }}>
+                      Jumlah yang harus ditransfer
                     </div>
-                    <div
-                      style={{
-                        marginTop: 4,
-                        display: "flex",
-                        alignItems: "baseline",
-                        justifyContent: "center",
-                        gap: 5,
-                        flexWrap: "wrap",
-                      }}
-                    >
-                      <span style={{ fontSize: 15, fontWeight: 700 }}>
-                        {formatRupiah(order.totalTransfer - order.kodeUnik)}
-                      </span>
-                      <span style={{ fontSize: 13, color: "var(--color-ink-soft)" }}>+</span>
-                      <span style={{ fontSize: 22, fontWeight: 900, color: "var(--color-accent)" }}>
-                        {order.kodeUnik}
-                      </span>
-                      <span style={{ fontSize: 13, color: "var(--color-ink-soft)" }}>=</span>
-                      <span style={{ fontSize: 17, fontWeight: 900 }}>
-                        {formatRupiah(order.totalTransfer)}
-                      </span>
+                    <div style={{ fontSize: 22, fontWeight: 900, color: "var(--color-accent)", marginTop: 2 }}>
+                      {formatRupiah(order.totalTransfer)}
+                    </div>
+                    <div style={{ fontSize: 11.5, color: "var(--color-ink-soft)" }}>
+                      ({formatRupiah(order.totalTransfer - order.kodeUnik)} + kode
+                      unik {order.kodeUnik})
                     </div>
                     <button
                       onClick={() => salinNominal(order)}
