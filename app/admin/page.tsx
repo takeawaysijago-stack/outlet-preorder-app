@@ -336,7 +336,9 @@ function IsiPesanan() {
                   <span className="menu-card-label">
                     {kodePesanan(order)} · {order.namaCustomer ?? "Customer"}
                   </span>
-                  <div className="tanggal-relatif">{formatTanggalRelatif(order.createdAt)}</div>
+                  <div className="tanggal-relatif">
+                    {formatTanggalRelatif(order.createdAt)} · {formatJam(order.createdAt)}
+                  </div>
                 </div>
                 <span
                   className="badge-habis"
@@ -394,6 +396,13 @@ function IsiPesanan() {
                       (kode {order.kodeUnik})
                     </span>
                   </div>
+                  {order.kodeUnik != null && (
+                    <div style={{ fontSize: 11.5, color: "var(--color-ink-soft)", marginTop: 3 }}>
+                      Kalau customer transfer dibulatkan (gak pakai kode), coba
+                      cari juga nominal <strong>{formatRupiah(order.totalHarga)}</strong> di
+                      mutasi -- cocokkan sama nama & jam di atas.
+                    </div>
+                  )}
                   {order.buktiTransferUrl ? (
                     <a href={order.buktiTransferUrl} target="_blank" rel="noopener noreferrer">
                       <img
