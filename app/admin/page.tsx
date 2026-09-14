@@ -8,13 +8,15 @@ import Memuat from "@/components/Memuat";
 import {
   dengarkanSemuaPesanan,
   updateStatusPesanan,
+  verifikasiDanMulaiProses,
   tolakBuktiTransfer,
 } from "@/lib/orderService";
 import { LABEL_STATUS, STATUS_BERIKUTNYA, kodePesanan } from "@/lib/orderLabels";
 import { IkonLonceng, IkonJamPasir } from "@/components/DoodleIcons";
 import { formatTanggalRelatif } from "@/lib/formatTanggal";
-import { buatLinkWA } from "@/lib/whatsapp";
-import type { Order, OrderStatus } from "@/lib/types";
+import { buatLinkWA, buatPesanStatusWA } from "@/lib/whatsapp";
+import { dengarkanPengaturan } from "@/lib/settingsService";
+import type { Order, OrderStatus, OperationalHours } from "@/lib/types";
 
 function formatRupiah(angka: number) {
   return new Intl.NumberFormat("id-ID", {
@@ -24,7 +26,8 @@ function formatRupiah(angka: number) {
   }).format(angka);
 }
 
-function formatJam(iso: string) {
+function formatJam(iso: string | null) {
+  if (!iso) return "Belum ditentukan";
   return new Date(iso).toLocaleTimeString("id-ID", {
     hour: "2-digit",
     minute: "2-digit",
@@ -154,6 +157,15 @@ function IsiPesanan() {
   );
   const idSudahDilihat = useRef<Set<string> | null>(null);
   const intervalAlarm = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [jamOps, setJamOps] = useState<OperationalHours>({
+    jamMulaiPesan: "09:00",
+    jamBuka: "12:00",
+    defaultMenitPenyiapan: 15,
+  });
+
+  useEffect(() => {
+    return dengarkanPengaturan(setJamOps);
+  }, []);
 
   useEffect(() => {
     const unsubscribe = dengarkanSemuaPesanan((data) => {
@@ -223,12 +235,13 @@ function IsiPesanan() {
     return hasil;
   }, [orders]);
 
-  const ordersTampil = orders.filter((o) => o.status === filter);
+  const ordersTampil = orders.filter((o) =>
+    filter === "sedang_disiapkan" ? o.status === "sedang_disiapkan" || o.status === "dibayar" : o.status === filter
+  );
 
   const tabList: { key: OrderStatus; label: string }[] = [
-    { key: "menunggu_pembayaran", label: "Menunggu Pembayaran" },
-    { key: "menunggu_verifikasi", label: "Perlu Verifikasi" },
-    { key: "dibayar", label: "Pesanan Masuk" },
+    { key: "menunggu_pembayaran", label: "Belum Bayar" },
+    { key: "menunggu_verifikasi", label: "Verifikasi" },
     { key: "sedang_disiapkan", label: "Disiapkan" },
     { key: "siap_diambil", label: "Siap Diambil" },
     { key: "selesai", label: "Selesai" },
@@ -291,7 +304,10 @@ function IsiPesanan() {
 
       <nav className="kategori-tabs">
         {tabList.map((tab) => {
-          const jumlah = jumlahPerStatus[tab.key];
+          const jumlah =
+            tab.key === "sedang_disiapkan"
+              ? (jumlahPerStatus.sedang_disiapkan ?? 0) + (jumlahPerStatus.dibayar ?? 0)
+              : jumlahPerStatus[tab.key];
           return (
             <button
               key={tab.key}
@@ -334,7 +350,9 @@ function IsiPesanan() {
                 </span>
               </div>
 
-              <div className="menu-card-value">Ambil jam {formatJam(order.jamAmbil)}</div>
+              <div className="menu-card-value">
+                {order.jamAmbil ? `Ambil jam ${formatJam(order.jamAmbil)}` : "Jam ambil: belum diverifikasi"}
+              </div>
               <div className="menu-card-harga-besar">{formatRupiah(order.totalHarga)}</div>
               <div className="menu-card-divider" />
 
@@ -396,59 +414,49 @@ function IsiPesanan() {
                       <div style={{ fontSize: 12, color: "var(--color-ink-soft)", marginTop: 6 }}>
                         Belum ada bukti transfer diupload. Kalau customer bilang
                         sudah transfer lewat WA, cek mutasi manual lalu klik
-                        &quot;Tandai: Sudah Dibayar&quot; di bawah.
+                        &quot;Verifikasi & Mulai Proses&quot; di bawah.
                       </div>
                     )
                   )}
                 </div>
               )}
 
-              {order.status !== "selesai" && order.status !== "dibatalkan" && (
+              {order.jamAmbil && order.status !== "selesai" && order.status !== "dibatalkan" && (
                 <CountdownJamAmbil jamAmbil={order.jamAmbil} />
               )}
 
               <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
                 {order.status === "menunggu_verifikasi" && (
-                  <>
-                    <button
-                      className="tambah-btn-lebar"
-                      style={{ padding: "8px 14px", fontSize: 13 }}
-                      onClick={() => setKonfirmasi({ order, statusBaru: "dibayar" })}
-                    >
-                      Verifikasi & Terima
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (confirm(`Tolak bukti transfer pesanan ${kodePesanan(order)}? Customer perlu upload ulang.`)) {
-                          tolakBuktiTransfer(order.id);
-                        }
-                      }}
-                      style={{
-                        ...linkBtnStyle,
-                        border: "1px solid var(--color-line)",
-                        borderRadius: 999,
-                        padding: "8px 14px",
-                      }}
-                    >
-                      Tolak Bukti
-                    </button>
-                  </>
+                  <button
+                    onClick={() => {
+                      if (confirm(`Tolak bukti transfer pesanan ${kodePesanan(order)}? Customer perlu upload ulang.`)) {
+                        tolakBuktiTransfer(order.id);
+                      }
+                    }}
+                    style={{
+                      ...linkBtnStyle,
+                      border: "1px solid var(--color-line)",
+                      borderRadius: 999,
+                      padding: "8px 14px",
+                    }}
+                  >
+                    Tolak Bukti
+                  </button>
                 )}
-                {statusBerikutnya && order.status !== "menunggu_verifikasi" && (
+                {statusBerikutnya && (
                   <button
                     className="tambah-btn-lebar"
                     style={{ padding: "8px 14px", fontSize: 13 }}
                     onClick={() => setKonfirmasi({ order, statusBaru: statusBerikutnya })}
                   >
-                    Tandai: {LABEL_STATUS[statusBerikutnya]}
+                    {statusBerikutnya === "sedang_disiapkan"
+                      ? "Verifikasi & Mulai Proses"
+                      : `Tandai: ${LABEL_STATUS[statusBerikutnya]}`}
                   </button>
                 )}
                 {order.noHpCustomer && (
                   <a
-                    href={buatLinkWA(
-                      order.noHpCustomer,
-                      `Halo ${order.namaCustomer ?? ""}, ini dari Geprek Si Jago mengenai pesanan ${kodePesanan(order)} (${order.items.map((it) => `${it.qty}x ${it.namaMenu}`).join(", ")}). `
-                    )}
+                    href={buatLinkWA(order.noHpCustomer, buatPesanStatusWA(order))}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
@@ -499,7 +507,11 @@ function IsiPesanan() {
           <div className="modal-sheet" onClick={(e) => e.stopPropagation()}>
             <div className="modal-handle" />
             <h2>
-              {konfirmasi.statusBaru === "dibatalkan" ? "Batalkan Pesanan?" : "Konfirmasi Status"}
+              {konfirmasi.statusBaru === "dibatalkan"
+                ? "Batalkan Pesanan?"
+                : konfirmasi.statusBaru === "sedang_disiapkan"
+                ? "Verifikasi & Mulai Proses?"
+                : "Konfirmasi Status"}
             </h2>
             <p style={{ fontSize: 13.5, color: "var(--color-ink-soft)", marginTop: 6 }}>
               {konfirmasi.statusBaru === "dibatalkan" ? (
@@ -507,6 +519,13 @@ function IsiPesanan() {
                   Yakin batalkan pesanan{" "}
                   <strong>{kodePesanan(konfirmasi.order)}</strong>? Tindakan ini
                   gak bisa dibalikin lagi.
+                </>
+              ) : konfirmasi.statusBaru === "sedang_disiapkan" ? (
+                <>
+                  Pesanan <strong>{kodePesanan(konfirmasi.order)}</strong> mulai
+                  diproses sekarang. Jam ambil otomatis diset{" "}
+                  <strong>{jamOps.defaultMenitPenyiapan} menit</strong> dari
+                  sekarang.
                 </>
               ) : (
                 <>
@@ -555,11 +574,19 @@ function IsiPesanan() {
                     konfirmasi.statusBaru === "dibatalkan" ? "var(--color-accent)" : undefined,
                 }}
                 onClick={() => {
-                  updateStatusPesanan(konfirmasi.order.id, konfirmasi.statusBaru);
+                  if (konfirmasi.statusBaru === "sedang_disiapkan") {
+                    verifikasiDanMulaiProses(konfirmasi.order.id, jamOps.defaultMenitPenyiapan);
+                  } else {
+                    updateStatusPesanan(konfirmasi.order.id, konfirmasi.statusBaru);
+                  }
                   setKonfirmasi(null);
                 }}
               >
-                {konfirmasi.statusBaru === "dibatalkan" ? "Ya, Batalkan" : "Ya, Yakin"}
+                {konfirmasi.statusBaru === "dibatalkan"
+                  ? "Ya, Batalkan"
+                  : konfirmasi.statusBaru === "sedang_disiapkan"
+                  ? "Ya, Verifikasi"
+                  : "Ya, Yakin"}
               </button>
             </div>
           </div>

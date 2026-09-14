@@ -22,7 +22,8 @@ function formatRupiah(angka: number) {
   }).format(angka);
 }
 
-function formatJam(iso: string) {
+function formatJam(iso: string | null) {
+  if (!iso) return null;
   return new Date(iso).toLocaleTimeString("id-ID", {
     hour: "2-digit",
     minute: "2-digit",
@@ -179,7 +180,11 @@ function IsiPesananSaya({ uid }: { uid: string }) {
                 <IkonStatusKecil status={order.status} />
               </div>
 
-              <div className="menu-card-value">Ambil jam {formatJam(order.jamAmbil)}</div>
+              <div className="menu-card-value">
+                {formatJam(order.jamAmbil)
+                  ? `Ambil jam ${formatJam(order.jamAmbil)}`
+                  : "Jam ambil menyusul setelah pembayaran diverifikasi"}
+              </div>
               <div className="menu-card-harga-besar">{formatRupiah(order.totalHarga)}</div>
 
               {(order.status === "menunggu_pembayaran" ||

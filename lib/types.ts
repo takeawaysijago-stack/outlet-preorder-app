@@ -67,7 +67,7 @@ export type Order = {
   // ke paket Blaze. Ukurannya sudah dikompres kecil di sisi customer.
   buktiTransferUrl?: string;
   buktiTransferUploadedAt?: string;
-  jamAmbil: string; // ISO datetime
+  jamAmbil: string | null; // ISO datetime -- null sampai admin verifikasi pembayaran
   status: OrderStatus;
   metodePembayaran?: "transfer_manual";
   createdAt: string; // ISO datetime

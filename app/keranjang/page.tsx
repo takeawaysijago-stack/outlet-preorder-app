@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import LoginGate from "@/components/LoginGate";
 import WhatsAppGate from "@/components/WhatsAppGate";
@@ -16,9 +16,8 @@ import {
 } from "@/lib/cart";
 import { buatPesanan, simpanBuktiTransfer } from "@/lib/orderService";
 import { kompresGambarKeBase64 } from "@/lib/gambar";
-import { dengarkanPengaturan } from "@/lib/settingsService";
 import { QRIS_IMAGE_PATH } from "@/lib/pembayaranConfig";
-import type { OrderItem, OperationalHours } from "@/lib/types";
+import type { OrderItem } from "@/lib/types";
 
 function formatRupiah(angka: number) {
   return new Intl.NumberFormat("id-ID", {
@@ -26,39 +25,6 @@ function formatRupiah(angka: number) {
     currency: "IDR",
     minimumFractionDigits: 0,
   }).format(angka);
-}
-
-// Generate slot jam ambil berdasarkan pengaturan admin:
-// - Waktu tersaran default = waktu sekarang + defaultMenitPenyiapan,
-//   TAPI tidak boleh lebih awal dari jam buka outlet hari ini.
-// - Slot dibuat tiap 15 menit, dimulai dari waktu tersaran itu.
-function generateSlotJam(settings: OperationalHours): { label: string; iso: string }[] {
-  const sekarang = new Date();
-  const [jamBukaH, jamBukaM] = settings.jamBuka.split(":").map(Number);
-
-  const jamBukaHariIni = new Date(sekarang);
-  jamBukaHariIni.setHours(jamBukaH, jamBukaM, 0, 0);
-
-  const usulan = new Date(
-    sekarang.getTime() + settings.defaultMenitPenyiapan * 60 * 1000
-  );
-
-  let mulai = usulan < jamBukaHariIni ? jamBukaHariIni : usulan;
-  mulai = new Date(mulai);
-  mulai.setMinutes(Math.ceil(mulai.getMinutes() / 15) * 15, 0, 0);
-
-  const slots: { label: string; iso: string }[] = [];
-  for (let i = 0; i < 12; i++) {
-    const waktu = new Date(mulai.getTime() + i * 15 * 60 * 1000);
-    slots.push({
-      label: waktu.toLocaleTimeString("id-ID", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-      iso: waktu.toISOString(),
-    });
-  }
-  return slots;
 }
 
 type OrderBayar = {
@@ -88,22 +54,9 @@ function IsiKeranjang({
 }) {
   const router = useRouter();
   const [lines, setLines] = useState<CartLine[]>([]);
-  const [jamAmbil, setJamAmbil] = useState("");
   const [mengirim, setMengirim] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [orderBayar, setOrderBayar] = useState<OrderBayar | null>(null);
-
-  const [jamOps, setJamOps] = useState<OperationalHours>({
-    jamMulaiPesan: "09:00",
-    jamBuka: "12:00",
-    defaultMenitPenyiapan: 15,
-  });
-
-  useEffect(() => {
-    return dengarkanPengaturan(setJamOps);
-  }, []);
-
-  const slotJam = useMemo(() => generateSlotJam(jamOps), [jamOps]);
 
   useEffect(() => {
     function muatUlang() {
@@ -113,14 +66,10 @@ function IsiKeranjang({
     return dengarkanKeranjang(muatUlang);
   }, []);
 
-  useEffect(() => {
-    if (!jamAmbil && slotJam.length > 0) setJamAmbil(slotJam[0].iso);
-  }, [slotJam, jamAmbil]);
-
   const subtotal = lines.reduce((s, l) => s + hitungHargaLine(l), 0);
 
   async function konfirmasiPesanan() {
-    if (lines.length === 0 || !jamAmbil) return;
+    if (lines.length === 0) return;
 
     setError(null);
     setMengirim(true);
@@ -146,7 +95,6 @@ function IsiKeranjang({
         noHpCustomer: noHp,
         items,
         totalHarga: subtotal,
-        jamAmbil,
       });
 
       // Minta server hitung ulang harga (jangan percaya harga dari browser)
@@ -256,21 +204,9 @@ function IsiKeranjang({
             </div>
             <p style={{ fontSize: 11.5, color: "var(--color-ink-soft)", marginTop: -8 }}>
               *Nanti ditambah kode unik 3 digit di layar berikutnya, supaya
-              verifikasi transfer lebih cepat.
+              verifikasi transfer lebih cepat. Jam ambil akan ditentukan
+              otomatis begitu pembayaran diverifikasi.
             </p>
-
-            <div className="modal-group-title">Jam Ambil</div>
-            <select
-              className="jam-select"
-              value={jamAmbil}
-              onChange={(e) => setJamAmbil(e.target.value)}
-            >
-              {slotJam.map((s) => (
-                <option key={s.iso} value={s.iso}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
 
             {error && (
               <p style={{ color: "var(--color-accent)", fontSize: 13, marginTop: 8 }}>

@@ -8,7 +8,6 @@ export async function buatPesanan(data: {
   noHpCustomer: string;
   items: OrderItem[];
   totalHarga: number;
-  jamAmbil: string;
 }) {
   const ref = await addDoc(collection(db, "orders"), {
     uid: data.uid,
@@ -16,7 +15,7 @@ export async function buatPesanan(data: {
     noHpCustomer: data.noHpCustomer,
     items: data.items,
     totalHarga: data.totalHarga,
-    jamAmbil: data.jamAmbil,
+    jamAmbil: null,
     status: "menunggu_pembayaran",
     createdAt: new Date().toISOString(),
   });
@@ -39,9 +38,15 @@ export async function simpanBuktiTransfer(orderId: string, buktiBase64: string) 
   });
 }
 
-// Admin klik "Verifikasi & Terima" -- nominal & bukti sudah dicek manual, cocok.
-export async function verifikasiPembayaran(orderId: string) {
-  await updateStatusPesanan(orderId, "dibayar");
+// Admin verifikasi pembayaran (dari tab "Verifikasi" ATAU override manual dari
+// tab "Belum Bayar") -- langsung lompat ke "sedang_disiapkan" dan jam ambil
+// dihitung otomatis dari SEKARANG + durasi masak (diatur admin di Pengaturan).
+export async function verifikasiDanMulaiProses(orderId: string, menitPenyiapan: number) {
+  const jamAmbil = new Date(Date.now() + menitPenyiapan * 60 * 1000).toISOString();
+  await updateDoc(doc(db, "orders", orderId), {
+    status: "sedang_disiapkan",
+    jamAmbil,
+  });
 }
 
 // Admin klik "Tolak Bukti" -- misal fotonya buram atau nominal gak cocok.
