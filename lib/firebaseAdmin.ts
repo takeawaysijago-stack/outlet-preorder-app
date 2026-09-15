@@ -5,6 +5,7 @@
 
 import { initializeApp, getApps, cert } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
+import { getMessaging } from "firebase-admin/messaging";
 
 function initAdmin() {
   if (getApps().length) return getApps()[0];
@@ -35,4 +36,8 @@ export function getAdminDb() {
     sudahDiatur = true;
   }
   return db;
+}
+
+export function getAdminMessaging() {
+  return getMessaging(initAdmin());
 }

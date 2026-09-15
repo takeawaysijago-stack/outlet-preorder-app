@@ -10,7 +10,7 @@
 // nominal transfer manual tiap pesanan beda-beda dan gampang dicocokkan
 // manual di mutasi rekening BRI.
 
-import { getAdminDb } from "@/lib/firebaseAdmin";
+import { getAdminDb, getAdminMessaging } from "@/lib/firebaseAdmin";
 import { buatKodeUnik } from "@/lib/kodeUnik";
 import type { OrderItem } from "@/lib/types";
 
@@ -92,6 +92,44 @@ export async function POST(req: Request) {
       totalTransfer,
       metodePembayaran: "transfer_manual",
     });
+
+    // Kirim notifikasi push ke HP admin yang sudah aktifkan notifikasi.
+    // Sengaja dibungkus try/catch sendiri -- kalau gagal kirim notif,
+    // checkout customer tetap harus sukses.
+    try {
+      const tokenSnaps = await db.collection("admin_push_tokens").get();
+      const tokens = tokenSnaps.docs.map((d) => d.id);
+      if (tokens.length > 0) {
+        const ringkasanItem = itemsTerverifikasi
+          .map((it) => `${it.qty}x ${it.namaMenu}`)
+          .join(", ");
+        const hasil = await getAdminMessaging().sendEachForMulticast({
+          tokens,
+          notification: {
+            title: "🍗 Pesanan Baru Masuk!",
+            body: ringkasanItem || "Ada pesanan baru menunggu diproses.",
+          },
+        });
+
+        // Bersihkan token yang udah gak valid (misal app di-uninstall/izin dicabut)
+        const tokenMati: string[] = [];
+        hasil.responses.forEach((r, i) => {
+          const kode = r.error?.code;
+          if (
+            !r.success &&
+            (kode === "messaging/registration-token-not-registered" ||
+              kode === "messaging/invalid-registration-token")
+          ) {
+            tokenMati.push(tokens[i]);
+          }
+        });
+        await Promise.all(
+          tokenMati.map((t) => db.collection("admin_push_tokens").doc(t).delete())
+        );
+      }
+    } catch {
+      // Diamkan -- notifikasi gagal bukan alasan gagalin checkout
+    }
 
     return Response.json({ totalHarga: subtotal, kodeUnik, totalTransfer });
   } catch (err) {

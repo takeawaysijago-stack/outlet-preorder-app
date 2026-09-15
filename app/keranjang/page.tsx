@@ -47,6 +47,7 @@ function IsiKeranjang({
   const [lines, setLines] = useState<CartLine[]>([]);
   const [mengirim, setMengirim] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [tampilNoticeQris, setTampilNoticeQris] = useState(false);
 
   useEffect(() => {
     function muatUlang() {
@@ -199,13 +200,51 @@ function IsiKeranjang({
             <button
               className="checkout-submit"
               disabled={mengirim}
-              onClick={konfirmasiPesanan}
+              onClick={() => setTampilNoticeQris(true)}
             >
               {mengirim ? "Memproses…" : `Konfirmasi Pesanan · ${formatRupiah(subtotal)}`}
             </button>
           </>
         )}
       </section>
+
+      {tampilNoticeQris && (
+        <div className="modal-overlay" onClick={() => setTampilNoticeQris(false)}>
+          <div className="modal-sheet" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-handle" />
+            <h2>Sebelum Lanjut ke Pembayaran</h2>
+            <p style={{ fontSize: 13.5, color: "var(--color-ink-soft)", marginTop: 6 }}>
+              Pembayaran di sini <strong>cuma lewat QRIS</strong> (scan pakai
+              GoPay, OVO, DANA, ShopeePay, atau m-banking yang ada fitur
+              QRIS-nya).
+            </p>
+            <p style={{ fontSize: 13.5, color: "var(--color-ink-soft)", marginTop: 8 }}>
+              Pastikan kamu udah punya salah satu aplikasi itu ya, biar
+              pembayarannya lancar.
+            </p>
+
+            <div style={{ display: "flex", gap: 10, marginTop: 20 }}>
+              <button
+                className="modal-submit"
+                style={{ background: "var(--color-ink)", flex: 1, marginTop: 0 }}
+                onClick={() => setTampilNoticeQris(false)}
+              >
+                Batal
+              </button>
+              <button
+                className="modal-submit"
+                style={{ flex: 1, marginTop: 0 }}
+                onClick={() => {
+                  setTampilNoticeQris(false);
+                  konfirmasiPesanan();
+                }}
+              >
+                Lanjut ke Pembayaran
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

@@ -16,6 +16,7 @@ import { IkonLonceng, IkonJamPasir } from "@/components/DoodleIcons";
 import { formatTanggalRelatif } from "@/lib/formatTanggal";
 import { buatLinkWA, buatPesanStatusWA } from "@/lib/whatsapp";
 import { dengarkanPengaturan } from "@/lib/settingsService";
+import { aktifkanNotifikasiHP, dengarkanPesanForeground } from "@/lib/pushNotif";
 import type { Order, OrderStatus, OperationalHours } from "@/lib/types";
 
 function formatRupiah(angka: number) {
@@ -177,6 +178,24 @@ function IsiPesanan() {
     return dengarkanPengaturan(setJamOps);
   }, []);
 
+  const [statusNotif, setStatusNotif] = useState<string | null>(null);
+  const [mengaktifkanNotif, setMengaktifkanNotif] = useState(false);
+
+  useEffect(() => {
+    return dengarkanPesanForeground((judul) => {
+      // App lagi kebuka -- FCM gak otomatis munculin notifikasi OS, jadi
+      // kita pakai alarm yang sudah ada biar tetap kedengeran/keliatan.
+      setAlarmPesan(judul);
+    });
+  }, []);
+
+  async function klikAktifkanNotif() {
+    setMengaktifkanNotif(true);
+    const hasil = await aktifkanNotifikasiHP();
+    setStatusNotif(hasil.pesan);
+    setMengaktifkanNotif(false);
+  }
+
   useEffect(() => {
     const unsubscribe = dengarkanSemuaPesanan((data) => {
       const idSemuaSekarang = new Set(data.map((o) => o.id));
@@ -290,18 +309,32 @@ function IsiPesanan() {
       <header className="app-header">
         <div className="eyebrow">Khusus staf</div>
         <h1>Pesanan Masuk</h1>
-        <Link
-          href="/admin/menu"
-          className="tambah-btn-lebar"
-          style={{
-            display: "inline-block",
-            marginTop: 12,
-            textDecoration: "none",
-            background: "var(--color-ink)",
-          }}
-        >
-          Kelola Menu →
-        </Link>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginTop: 12 }}>
+          <Link
+            href="/admin/menu"
+            className="tambah-btn-lebar"
+            style={{
+              display: "inline-block",
+              textDecoration: "none",
+              background: "var(--color-ink)",
+            }}
+          >
+            Kelola Menu →
+          </Link>
+          <button
+            onClick={klikAktifkanNotif}
+            disabled={mengaktifkanNotif}
+            className="tambah-btn-lebar"
+            style={{ background: "var(--color-accent)" }}
+          >
+            {mengaktifkanNotif ? "Mengaktifkan…" : "🔔 Aktifkan Notifikasi HP"}
+          </button>
+        </div>
+        {statusNotif && (
+          <p style={{ fontSize: 12.5, color: "var(--color-ink-soft)", marginTop: 8 }}>
+            {statusNotif}
+          </p>
+        )}
       </header>
 
       <section className="kategori-section">
