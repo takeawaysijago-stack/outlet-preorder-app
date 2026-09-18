@@ -9,6 +9,8 @@ import { dengarkanMenu } from "@/lib/menuService";
 import AddOnModal from "@/components/AddOnModal";
 import { bacaKeranjang, dengarkanKeranjang, hitungHargaLine } from "@/lib/cart";
 import { dengarkanPengaturan } from "@/lib/settingsService";
+import { apakahAplikasiBuka } from "@/lib/jamOperasional";
+import type { OperationalHours } from "@/lib/types";
 import Memuat from "@/components/Memuat";
 
 function formatRupiah(angka: number) {
@@ -47,13 +49,26 @@ function IsiMenu({ namaUser }: { namaUser: string | null }) {
   const [totalHargaKeranjang, setTotalHargaKeranjang] = useState(0);
   const [tokoBuka, setTokoBuka] = useState(true);
   const [memuatToko, setMemuatToko] = useState(true);
+  const [jamOps, setJamOps] = useState<OperationalHours | null>(null);
 
   useEffect(() => {
     return dengarkanPengaturan((settings) => {
-      setTokoBuka(settings.tokoBuka !== false);
+      setJamOps(settings);
+      setTokoBuka(apakahAplikasiBuka(settings));
       setMemuatToko(false);
     });
   }, []);
+
+  // Kalau mode aplikasi "otomatis", status buka/tutup bisa berubah sendiri
+  // pas jam tertentu tanpa ada perubahan data di Firestore -- jadi perlu
+  // dicek ulang berkala biar layar otomatis kebuka/ketutup tepat waktu.
+  useEffect(() => {
+    if (!jamOps || jamOps.modeAplikasi !== "otomatis") return;
+    const interval = setInterval(() => {
+      setTokoBuka(apakahAplikasiBuka(jamOps));
+    }, 30_000);
+    return () => clearInterval(interval);
+  }, [jamOps]);
 
   useEffect(() => {
     const unsubscribe = dengarkanMenu((items) => {
