@@ -6,7 +6,7 @@ import { db } from "@/lib/firebase";
 
 // Diisi dari Firebase Console > Project Settings > Cloud Messaging >
 // Web configuration > Web Push certificates (generate kalau belum ada).
-const VAPID_KEY = "TODO_ISI_VAPID_KEY_DARI_FIREBASE_CONSOLE";
+const VAPID_KEY = "BETDh9z7B8PxRys1IoTFJP2tQpzG-qazh6_mSTyvfhOsWRqmP_6VZU548NKsLCRniHhsqTSuI8rDpM6NcxTseg8";
 
 export async function aktifkanNotifikasiHP(): Promise<{ ok: boolean; pesan: string }> {
   if (typeof window === "undefined") return { ok: false, pesan: "Tidak didukung." };
