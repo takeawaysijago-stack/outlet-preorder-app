@@ -6,9 +6,10 @@
 // request. Hasil hitungan ulang ini juga dipakai buat memperbaiki data
 // pesanan yang tersimpan, jadi admin selalu lihat harga yang benar.
 //
-// Route ini juga yang menentukan kode unik (100-999) tiap pesanan, supaya
+// Route ini juga yang menentukan kode unik (100-499) tiap pesanan, supaya
 // nominal transfer manual tiap pesanan beda-beda dan gampang dicocokkan
-// manual di mutasi rekening BRI.
+// manual di mutasi rekening BRI. Angka yang sama ini juga jadi 3 digit
+// belakang nomor pesanan (format GSJ-XXX, lihat lib/orderLabels.ts).
 
 import { getAdminDb, getAdminMessaging } from "@/lib/firebaseAdmin";
 import { buatKodeUnik } from "@/lib/kodeUnik";
