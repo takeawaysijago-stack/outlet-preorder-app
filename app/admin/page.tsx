@@ -170,8 +170,12 @@ function IsiPesanan() {
   const intervalAlarm = useRef<ReturnType<typeof setInterval> | null>(null);
   const [jamOps, setJamOps] = useState<OperationalHours>({
     jamMulaiPesan: "09:00",
+    jamTutupPesan: "21:00",
     jamBuka: "12:00",
+    jamTutupOutlet: "21:00",
     defaultMenitPenyiapan: 15,
+    modeAplikasi: "manual",
+    tokoBuka: true,
   });
 
   useEffect(() => {
@@ -597,9 +601,10 @@ function IsiPesanan() {
               ) : konfirmasi.statusBaru === "sedang_disiapkan" ? (
                 <>
                   Pesanan <strong>{kodePesanan(konfirmasi.order)}</strong> mulai
-                  diproses sekarang. Jam ambil otomatis diset{" "}
+                  diproses sekarang. Jam ambil otomatis dihitung{" "}
                   <strong>{jamOps.defaultMenitPenyiapan} menit</strong> dari
-                  sekarang.
+                  sekarang (disesuaikan otomatis kalau di luar jam operasional
+                  outlet).
                 </>
               ) : (
                 <>
@@ -649,7 +654,7 @@ function IsiPesanan() {
                 }}
                 onClick={() => {
                   if (konfirmasi.statusBaru === "sedang_disiapkan") {
-                    verifikasiDanMulaiProses(konfirmasi.order.id, jamOps.defaultMenitPenyiapan);
+                    verifikasiDanMulaiProses(konfirmasi.order.id, jamOps);
                   } else {
                     updateStatusPesanan(konfirmasi.order.id, konfirmasi.statusBaru);
                   }
