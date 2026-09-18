@@ -4,6 +4,7 @@ import { useState } from "react";
 import { simpanBuktiTransfer } from "@/lib/orderService";
 import { kompresGambarKeBase64 } from "@/lib/gambar";
 import { QRIS_IMAGE_PATH } from "@/lib/pembayaranConfig";
+import { kodePesanan } from "@/lib/orderLabels";
 
 function formatRupiah(angka: number) {
   return new Intl.NumberFormat("id-ID", {
@@ -69,7 +70,7 @@ export default function LayarBayarManual({
         <header className="app-header">
           <h1>Bukti Terkirim 🎉</h1>
           <p className="subtitle">
-            Nomor pesanan kamu: <strong>{orderId.slice(0, 8).toUpperCase()}</strong>
+            Nomor pesanan kamu: <strong>{kodePesanan({ id: orderId, kodeUnik })}</strong>
           </p>
         </header>
         <section className="kategori-section">
@@ -90,7 +91,7 @@ export default function LayarBayarManual({
       <header className="app-header">
         <h1>Selesaikan Pembayaran</h1>
         <p className="subtitle">
-          Nomor pesanan: <strong>{orderId.slice(0, 8).toUpperCase()}</strong>
+          Nomor pesanan: <strong>{kodePesanan({ id: orderId, kodeUnik })}</strong>
         </p>
       </header>
 
