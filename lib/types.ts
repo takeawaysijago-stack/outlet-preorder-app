@@ -76,8 +76,14 @@ export type Order = {
 };
 
 export type OperationalHours = {
-  jamMulaiPesan: string; // format "HH:mm", contoh "09:00"
-  jamBuka: string; // format "HH:mm", contoh "12:00"
+  jamMulaiPesan: string; // format "HH:mm" -- juga jadi jam BUKA aplikasi kalau modeAplikasi "otomatis"
+  jamTutupPesan?: string; // format "HH:mm" -- jam TUTUP aplikasi, dipakai kalau modeAplikasi "otomatis"
+  jamBuka: string; // format "HH:mm" -- jam BUKA outlet (pesanan mulai bisa diambil), SELALU otomatis
+  jamTutupOutlet?: string; // format "HH:mm" -- jam TUTUP outlet (batas akhir pesanan bisa diambil), SELALU otomatis
   defaultMenitPenyiapan: number; // default 30
-  tokoBuka?: boolean; // default true kalau belum diset
+  // Cara menentukan aplikasi (penerimaan pesanan) buka/tutup:
+  // "manual" (default) -- admin nyalain/matiin sendiri lewat saklar tokoBuka.
+  // "otomatis" -- ngikutin jadwal jamMulaiPesan - jamTutupPesan tiap hari.
+  modeAplikasi?: "manual" | "otomatis";
+  tokoBuka?: boolean; // dipakai HANYA kalau modeAplikasi "manual"; default true kalau belum diset
 };

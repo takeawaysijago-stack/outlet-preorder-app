@@ -1,6 +1,7 @@
 import { collection, addDoc, doc, updateDoc, onSnapshot, query, orderBy, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import type { Order, OrderItem } from "@/lib/types";
+import type { Order, OrderItem, OperationalHours } from "@/lib/types";
+import { hitungJamAmbilOtomatis } from "@/lib/jamOperasional";
 
 export function dengarkanPesanan(
   orderId: string,
@@ -52,10 +53,13 @@ export async function simpanBuktiTransfer(orderId: string, buktiBase64: string) 
 }
 
 // Admin verifikasi pembayaran (dari tab "Verifikasi" ATAU override manual dari
-// tab "Belum Bayar") -- langsung lompat ke "sedang_disiapkan" dan jam ambil
-// dihitung otomatis dari SEKARANG + durasi masak (diatur admin di Pengaturan).
-export async function verifikasiDanMulaiProses(orderId: string, menitPenyiapan: number) {
-  const jamAmbil = new Date(Date.now() + menitPenyiapan * 60 * 1000).toISOString();
+// tab "Belum Bayar") -- langsung lompat ke "sedang_disiapkan". Jam ambil
+// dihitung otomatis dari SEKARANG + durasi masak (defaultMenitPenyiapan),
+// TAPI kalau hasilnya jatuh di luar jam operasional outlet (jamBuka -
+// jamTutupOutlet, selalu otomatis), otomatis disesuaikan ke jam buka outlet
+// terdekat -- lihat lib/jamOperasional.ts.
+export async function verifikasiDanMulaiProses(orderId: string, jamOps: OperationalHours) {
+  const jamAmbil = hitungJamAmbilOtomatis(jamOps).toISOString();
   await updateDoc(doc(db, "orders", orderId), {
     status: "sedang_disiapkan",
     jamAmbil,

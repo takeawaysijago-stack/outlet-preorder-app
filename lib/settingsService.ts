@@ -6,8 +6,12 @@ const DOC_PATH = ["settings", "operasional"] as const;
 
 const DEFAULT_SETTINGS: OperationalHours = {
   jamMulaiPesan: "09:00",
+  jamTutupPesan: "21:00",
   jamBuka: "12:00",
+  jamTutupOutlet: "21:00",
   defaultMenitPenyiapan: 15,
+  modeAplikasi: "manual",
+  tokoBuka: true,
 };
 
 export function dengarkanPengaturan(
