@@ -1,11 +1,14 @@
 import type { Firestore } from "firebase-admin/firestore";
 
 const MIN = 100;
-const MAX = 999;
+const MAX = 499;
 
-// Cari kode unik (100-999) yang belum dipakai pesanan lain yang masih aktif
-// menunggu pembayaran/verifikasi, supaya nominal transfer tiap pesanan beda-beda
-// dan gampang dicocokkan manual di mutasi rekening BRI.
+// Cari kode unik (100-499, selalu 3 digit & di bawah 500) yang belum dipakai
+// pesanan lain yang masih aktif menunggu pembayaran/verifikasi, supaya nominal
+// transfer tiap pesanan beda-beda dan gampang dicocokkan manual di mutasi
+// rekening BRI. Angka yang sama ini juga dipakai sebagai 3 digit belakang
+// nomor pesanan (format GSJ-XXX) di lib/orderLabels.ts, jadi nomor pesanan
+// dan kode unik transfer selalu serasi/sama.
 export async function buatKodeUnik(db: Firestore, kecualiOrderId: string): Promise<number> {
   const snap = await db
     .collection("orders")

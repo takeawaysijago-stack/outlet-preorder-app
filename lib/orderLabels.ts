@@ -1,7 +1,16 @@
 import type { Order, OrderStatus } from "@/lib/types";
 
-// Nomor pesanan yang ditampilkan ke user
-export function kodePesanan(order: Pick<Order, "id">): string {
+// Nomor pesanan yang ditampilkan ke user.
+// Formatnya GSJ-XXX, di mana XXX adalah kode unik (100-499) yang sama persis
+// dengan kode unik nominal transfer pesanan ini -- jadi customer/admin tinggal
+// cocokkan 3 digit belakang nomor pesanan dengan 3 digit belakang nominal
+// transfer di mutasi rekening.
+// Fallback ke format lama (potongan ID Firestore) cuma buat jaga-jaga kalau
+// ada pesanan lama/aneh yang entah kenapa belum punya kodeUnik sama sekali.
+export function kodePesanan(order: Pick<Order, "id" | "kodeUnik">): string {
+  if (typeof order.kodeUnik === "number") {
+    return `GSJ-${order.kodeUnik}`;
+  }
   return `#${order.id.slice(0, 8).toUpperCase()}`;
 }
 

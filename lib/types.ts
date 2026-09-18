@@ -57,8 +57,10 @@ export type Order = {
   noHpCustomer?: string;
   items: OrderItem[];
   totalHarga: number;
-  // Kode unik (100-999) ditambahkan ke totalHarga supaya nominal transfer tiap
+  // Kode unik (100-499) ditambahkan ke totalHarga supaya nominal transfer tiap
   // pesanan beda-beda dan gampang dicocokkan manual di mutasi rekening.
+  // Angka yang sama ini juga jadi 3 digit belakang nomor pesanan "GSJ-XXX"
+  // (lihat kodePesanan() di lib/orderLabels.ts).
   kodeUnik?: number;
   // totalHarga + kodeUnik -- ini nominal PAS yang wajib ditransfer customer.
   totalTransfer?: number;
