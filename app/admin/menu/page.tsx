@@ -48,8 +48,11 @@ function IsiAdmin() {
   const [error, setError] = useState<string | null>(null);
   const [jamOps, setJamOps] = useState<OperationalHours>({
     jamMulaiPesan: "09:00",
+    jamTutupPesan: "21:00",
     jamBuka: "12:00",
+    jamTutupOutlet: "21:00",
     defaultMenitPenyiapan: 15,
+    modeAplikasi: "manual",
     tokoBuka: true,
   });
   const [menyimpanJam, setMenyimpanJam] = useState(false);
@@ -259,42 +262,88 @@ function IsiAdmin() {
             gap: 10,
           }}
         >
-          <strong>Jam Operasional</strong>
-
-          <label
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              background: "var(--color-bg)",
-              borderRadius: 12,
-              padding: "10px 12px",
-            }}
-          >
-            <span style={{ fontSize: 13.5, fontWeight: 700 }}>
-              {jamOps.tokoBuka === false ? "Toko Sedang Tutup" : "Toko Sedang Buka"}
-            </span>
-            <span className="toggle-switch">
-              <input
-                type="checkbox"
-                checked={jamOps.tokoBuka !== false}
-                onChange={toggleTokoBuka}
-              />
-              <span className="toggle-slider" />
-            </span>
-          </label>
+          <strong>Jam Buka Aplikasi (Pemesanan)</strong>
 
           <label style={{ fontSize: 13, color: "var(--color-ink-soft)" }}>
-            Mulai bisa pesan (pre-order)
-            <input
-              type="time"
-              value={jamOps.jamMulaiPesan}
+            Mode
+            <select
+              value={jamOps.modeAplikasi ?? "manual"}
               onChange={(e) =>
-                setJamOps((j) => ({ ...j, jamMulaiPesan: e.target.value }))
+                setJamOps((j) => ({
+                  ...j,
+                  modeAplikasi: e.target.value as "manual" | "otomatis",
+                }))
               }
               style={{ ...inputStyle, marginTop: 4 }}
-            />
+            >
+              <option value="manual">Manual (saya nyalain/matiin sendiri)</option>
+              <option value="otomatis">Otomatis (ikut jadwal jam)</option>
+            </select>
           </label>
+
+          {(jamOps.modeAplikasi ?? "manual") === "manual" ? (
+            <label
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                background: "var(--color-bg)",
+                borderRadius: 12,
+                padding: "10px 12px",
+              }}
+            >
+              <span style={{ fontSize: 13.5, fontWeight: 700 }}>
+                {jamOps.tokoBuka === false ? "Toko Sedang Tutup" : "Toko Sedang Buka"}
+              </span>
+              <span className="toggle-switch">
+                <input
+                  type="checkbox"
+                  checked={jamOps.tokoBuka !== false}
+                  onChange={toggleTokoBuka}
+                />
+                <span className="toggle-slider" />
+              </span>
+            </label>
+          ) : (
+            <>
+              <label style={{ fontSize: 13, color: "var(--color-ink-soft)" }}>
+                Jam mulai pesan (buka aplikasi)
+                <input
+                  type="time"
+                  value={jamOps.jamMulaiPesan}
+                  onChange={(e) =>
+                    setJamOps((j) => ({ ...j, jamMulaiPesan: e.target.value }))
+                  }
+                  style={{ ...inputStyle, marginTop: 4 }}
+                />
+              </label>
+
+              <label style={{ fontSize: 13, color: "var(--color-ink-soft)" }}>
+                Jam tutup aplikasi (berhenti terima pesanan)
+                <input
+                  type="time"
+                  value={jamOps.jamTutupPesan ?? "21:00"}
+                  onChange={(e) =>
+                    setJamOps((j) => ({ ...j, jamTutupPesan: e.target.value }))
+                  }
+                  style={{ ...inputStyle, marginTop: 4 }}
+                />
+              </label>
+
+              <p style={{ fontSize: 12, color: "var(--color-ink-soft)", margin: 0 }}>
+                Aplikasi otomatis buka & tutup sendiri tiap hari sesuai jam di
+                atas -- gak perlu nyalain/matiin manual lagi.
+              </p>
+            </>
+          )}
+
+          <div style={{ height: 1, background: "var(--color-bg)", margin: "6px 0" }} />
+
+          <strong>Jam Buka Outlet (Pengambilan Pesanan)</strong>
+          <p style={{ fontSize: 12, color: "var(--color-ink-soft)", margin: 0 }}>
+            Jam ini SELALU otomatis (gak ada saklar manual) -- menentukan jam
+            berapa pesanan mulai & berhenti bisa diambil.
+          </p>
 
           <label style={{ fontSize: 13, color: "var(--color-ink-soft)" }}>
             Jam buka outlet (pesanan mulai bisa diambil)
@@ -303,6 +352,18 @@ function IsiAdmin() {
               value={jamOps.jamBuka}
               onChange={(e) =>
                 setJamOps((j) => ({ ...j, jamBuka: e.target.value }))
+              }
+              style={{ ...inputStyle, marginTop: 4 }}
+            />
+          </label>
+
+          <label style={{ fontSize: 13, color: "var(--color-ink-soft)" }}>
+            Jam tutup outlet (batas akhir pesanan diambil)
+            <input
+              type="time"
+              value={jamOps.jamTutupOutlet ?? "21:00"}
+              onChange={(e) =>
+                setJamOps((j) => ({ ...j, jamTutupOutlet: e.target.value }))
               }
               style={{ ...inputStyle, marginTop: 4 }}
             />
@@ -325,9 +386,11 @@ function IsiAdmin() {
           </label>
 
           <p style={{ fontSize: 12, color: "var(--color-ink-soft)", margin: 0 }}>
-            Contoh: kalau customer pesan jam 10:00, dan default waktu siap 15
-            menit, tapi outlet baru buka jam 12:00 — jam ambil otomatis
-            disarankan jam 12:00 (bukan 10:15), karena outlet belum buka.
+            Contoh: kalau pesanan diverifikasi jam 10:00, dan default waktu siap
+            15 menit, tapi outlet baru buka jam 12:00 — jam ambil otomatis
+            dimajukan ke jam 12:00 (bukan 10:15), karena outlet belum buka.
+            Begitu juga kalau sudah lewat jam tutup outlet, otomatis dimajukan
+            ke jam buka outlet besok.
           </p>
 
           <button
