@@ -10,10 +10,12 @@ import {
   updateStatusPesanan,
   verifikasiDanMulaiProses,
   tolakBuktiTransfer,
+  hapusPesanan,
+  hapusBanyakPesanan,
 } from "@/lib/orderService";
 import { LABEL_STATUS, STATUS_BERIKUTNYA, kodePesanan } from "@/lib/orderLabels";
 import { IkonLonceng, IkonJamPasir } from "@/components/DoodleIcons";
-import { formatTanggalRelatif } from "@/lib/formatTanggal";
+import { formatTanggalRelatif, selisihHari } from "@/lib/formatTanggal";
 import { buatLinkWA, buatPesanStatusWA } from "@/lib/whatsapp";
 import { dengarkanPengaturan } from "@/lib/settingsService";
 import { aktifkanNotifikasiHP, dengarkanPesanForeground } from "@/lib/pushNotif";
@@ -294,6 +296,55 @@ function IsiPesanan() {
     filter === "sedang_disiapkan" ? o.status === "sedang_disiapkan" || o.status === "dibayar" : o.status === filter
   );
 
+  const [menghapusLama, setMenghapusLama] = useState(false);
+  const [menghapusId, setMenghapusId] = useState<string | null>(null);
+
+  // Pesanan "Selesai" yang sudah lebih dari 7 hari -- kandidat buat dihapus
+  // biar tab Selesai gak numpuk pesanan lama terus-terusan.
+  const pesananSelesaiLama = useMemo(
+    () => orders.filter((o) => o.status === "selesai" && selisihHari(o.createdAt) >= 7),
+    [orders]
+  );
+
+  async function hapusSemuaPesananLama() {
+    if (pesananSelesaiLama.length === 0) return;
+    if (
+      !confirm(
+        `Hapus permanen ${pesananSelesaiLama.length} pesanan selesai yang sudah lebih dari 7 hari? Tindakan ini gak bisa dibalikin.`
+      )
+    ) {
+      return;
+    }
+    setMenghapusLama(true);
+    try {
+      await hapusBanyakPesanan(pesananSelesaiLama.map((o) => o.id));
+    } catch (e) {
+      const pesan = e instanceof Error ? e.message : "Error tidak diketahui";
+      alert(`Gagal menghapus sebagian/semua pesanan lama: ${pesan}`);
+    } finally {
+      setMenghapusLama(false);
+    }
+  }
+
+  async function hapusSatuPesanan(order: Order) {
+    if (
+      !confirm(
+        `Hapus permanen pesanan ${kodePesanan(order)}? Tindakan ini gak bisa dibalikin.`
+      )
+    ) {
+      return;
+    }
+    setMenghapusId(order.id);
+    try {
+      await hapusPesanan(order.id);
+    } catch (e) {
+      const pesan = e instanceof Error ? e.message : "Error tidak diketahui";
+      alert(`Gagal menghapus pesanan: ${pesan}`);
+    } finally {
+      setMenghapusId(null);
+    }
+  }
+
   const tabList: { key: OrderStatus; label: string }[] = [
     { key: "menunggu_pembayaran", label: "Belum Bayar" },
     { key: "menunggu_verifikasi", label: "Verifikasi" },
@@ -390,6 +441,45 @@ function IsiPesanan() {
         })}
       </nav>
 
+      {filter === "selesai" && pesananSelesaiLama.length > 0 && (
+        <section className="kategori-section">
+          <div
+            style={{
+              background: "#fff3cd",
+              border: "1.5px solid #f0ad4e",
+              borderRadius: "var(--radius-lg)",
+              padding: 12,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 10,
+              flexWrap: "wrap",
+            }}
+          >
+            <span style={{ fontSize: 13, color: "#6b4a00" }}>
+              Ada <strong>{pesananSelesaiLama.length}</strong> pesanan selesai
+              yang sudah lebih dari 7 hari.
+            </span>
+            <button
+              onClick={hapusSemuaPesananLama}
+              disabled={menghapusLama}
+              style={{
+                border: "1px solid #d9534f",
+                color: "#d9534f",
+                background: "#fff",
+                borderRadius: 999,
+                padding: "8px 14px",
+                fontSize: 13,
+                fontWeight: 700,
+                cursor: "pointer",
+              }}
+            >
+              {menghapusLama ? "Menghapus…" : `🗑 Hapus ${pesananSelesaiLama.length} Pesanan Lama`}
+            </button>
+          </div>
+        </section>
+      )}
+
       <section className="kategori-section">
         {memuat && <Memuat pesan={["Lagi ambil data pesanan…"]} />}
         {!memuat && ordersTampil.length === 0 && (
@@ -398,9 +488,16 @@ function IsiPesanan() {
 
         {ordersTampil.map((order) => {
           const statusBerikutnya = STATUS_BERIKUTNYA[order.status];
+          // Di tab "Selesai", pesanan dari hari-hari sebelumnya dibuat buram
+          // (dimming) biar keliatan jelas mana pesanan hari ini vs yang lama.
+          const sudahLewatHariIni = filter === "selesai" && selisihHari(order.createdAt) >= 1;
+          const sudahLebihSemInggu = selisihHari(order.createdAt) >= 7;
           return (
-            <div key={order.id} className="menu-card">
-              <div className="menu-card-top">
+            <div
+              key={order.id}
+              className="menu-card"
+              style={sudahLewatHariIni ? { opacity: 0.5 } : undefined}
+            >              <div className="menu-card-top">
                 <div>
                   <span className="menu-card-label">
                     {kodePesanan(order)} · {order.namaCustomer ?? "Customer"}
@@ -572,6 +669,21 @@ function IsiPesanan() {
                     }}
                   >
                     Batalkan
+                  </button>
+                )}
+                {order.status === "selesai" && sudahLebihSemInggu && (
+                  <button
+                    onClick={() => hapusSatuPesanan(order)}
+                    disabled={menghapusId === order.id}
+                    style={{
+                      ...linkBtnStyle,
+                      border: "1px solid #d9534f",
+                      color: "#d9534f",
+                      borderRadius: 999,
+                      padding: "8px 14px",
+                    }}
+                  >
+                    {menghapusId === order.id ? "Menghapus…" : "🗑 Hapus"}
                   </button>
                 )}
               </div>
