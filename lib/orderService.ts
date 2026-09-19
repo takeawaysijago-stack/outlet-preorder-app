@@ -1,4 +1,4 @@
-import { collection, addDoc, doc, updateDoc, onSnapshot, query, orderBy, where } from "firebase/firestore";
+import { collection, addDoc, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy, where } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { Order, OrderItem, OperationalHours } from "@/lib/types";
 import { hitungJamAmbilOtomatis } from "@/lib/jamOperasional";
@@ -74,6 +74,23 @@ export async function tolakBuktiTransfer(orderId: string) {
     buktiTransferUrl: null,
     buktiTransferUploadedAt: null,
   });
+}
+
+// Hapus satu pesanan permanen dari Firestore. Dipakai admin buat beberes
+// pesanan lama (misal dari tab "Selesai") yang udah gak perlu disimpan lagi.
+// Gak bisa dibalikin -- pastikan sudah dikonfirmasi dulu di sisi UI.
+export async function hapusPesanan(orderId: string) {
+  await deleteDoc(doc(db, "orders", orderId));
+}
+
+// Hapus banyak pesanan sekaligus (misal semua pesanan "Selesai" yang udah
+// lebih dari 7 hari). Dijalankan satu-satu biar kalau ada satu yang gagal
+// (misal masalah jaringan di tengah jalan), yang lain tetap kehapus dan
+// error-nya bisa dilempar balik ke pemanggil buat ditampilkan ke admin.
+export async function hapusBanyakPesanan(orderIds: string[]) {
+  for (const id of orderIds) {
+    await deleteDoc(doc(db, "orders", id));
+  }
 }
 
 export function dengarkanSemuaPesanan(callback: (orders: Order[]) => void) {
