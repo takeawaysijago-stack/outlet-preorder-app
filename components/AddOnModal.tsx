@@ -272,20 +272,25 @@ export default function AddOnModal({
             type="button"
             onClick={toggleModeManual}
             style={{
-              background: "none",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 6,
+              width: "100%",
+              background: modeManual ? "var(--color-accent)" : "var(--color-accent-soft)",
+              color: modeManual ? "#fff" : "var(--color-accent)",
               border: "none",
-              padding: 0,
-              margin: "-6px 0 4px",
-              color: "var(--color-accent)",
-              fontSize: 13,
-              fontWeight: 700,
-              textAlign: "left",
+              borderRadius: "var(--radius-full)",
+              padding: "10px 14px",
+              margin: "2px 0 8px",
+              fontSize: 13.5,
+              fontWeight: 800,
               cursor: "pointer",
             }}
           >
             {modeManual
-              ? "← Samakan opsi semua porsi"
-              : `Mau opsi beda-beda tiap porsi? Atur satu-satu →`}
+              ? "✓ Opsi beda per porsi aktif — klik buat samakan lagi"
+              : "🍽️ Mau opsi beda-beda tiap porsi? Atur satu-satu"}
           </button>
         )}
 
