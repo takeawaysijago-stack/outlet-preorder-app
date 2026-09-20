@@ -12,6 +12,7 @@ import { dengarkanPengaturan } from "@/lib/settingsService";
 import { apakahAplikasiBuka } from "@/lib/jamOperasional";
 import type { OperationalHours } from "@/lib/types";
 import Memuat from "@/components/Memuat";
+import TabMenuPesanan from "@/components/TabMenuPesanan";
 
 function formatRupiah(angka: number) {
   return new Intl.NumberFormat("id-ID", {
@@ -117,6 +118,8 @@ function IsiMenu({ namaUser }: { namaUser: string | null }) {
           <h1>Halo, {namaUser?.split(" ")[0] ?? "Customer"}</h1>
         </div>
       </header>
+
+      <TabMenuPesanan />
 
       <nav className="kategori-tabs">
         <button
