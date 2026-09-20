@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import LoginGate from "@/components/LoginGate";
 import WhatsAppGate from "@/components/WhatsAppGate";
 import Memuat from "@/components/Memuat";
+import TabMenuPesanan from "@/components/TabMenuPesanan";
 import { dengarkanPesananSaya, simpanBuktiTransfer } from "@/lib/orderService";
 import { kompresGambarKeBase64 } from "@/lib/gambar";
 import { QRIS_IMAGE_PATH } from "@/lib/pembayaranConfig";
@@ -138,19 +138,9 @@ function IsiPesananSaya({ uid }: { uid: string }) {
     <main>
       <header className="app-header">
         <h1>Pesanan Saya</h1>
-        <Link
-          href="/"
-          className="tambah-btn-lebar"
-          style={{
-            display: "inline-block",
-            marginTop: 12,
-            textDecoration: "none",
-            background: "var(--color-ink)",
-          }}
-        >
-          ← Kembali ke Menu
-        </Link>
       </header>
+
+      <TabMenuPesanan />
 
       <section className="kategori-section">
         {memuat && <Memuat pesan={["Lagi ambil daftar pesanan kamu…"]} />}
