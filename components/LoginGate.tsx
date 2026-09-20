@@ -9,7 +9,6 @@ import {
   type User,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
-import Link from "next/link";
 import Memuat from "@/components/Memuat";
 
 declare global {
@@ -129,14 +128,9 @@ export default function LoginGate({
     <>
       <div className="top-bar">
         <span>Halo, {user.displayName?.split(" ")[0] ?? "Customer"}</span>
-        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-          <Link href="/pesanan" className="keluar-btn" style={{ textDecoration: "none" }}>
-            Pesanan Saya
-          </Link>
-          <button className="keluar-btn" onClick={() => signOut(auth)}>
-            Keluar
-          </button>
-        </div>
+        <button className="keluar-btn" onClick={() => signOut(auth)}>
+          Keluar
+        </button>
       </div>
       {children(user)}
     </>
