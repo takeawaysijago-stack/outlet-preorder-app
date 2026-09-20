@@ -44,7 +44,6 @@ export default function HalamanMenu() {
 function IsiMenu({ namaUser }: { namaUser: string | null }) {
   const [daftarMenu, setDaftarMenu] = useState<MenuItem[]>([]);
   const [memuat, setMemuat] = useState(true);
-  const [kategoriAktif, setKategoriAktif] = useState<string | null>(null);
   const [itemDipilih, setItemDipilih] = useState<MenuItem | null>(null);
   const [totalItemKeranjang, setTotalItemKeranjang] = useState(0);
   const [totalHargaKeranjang, setTotalHargaKeranjang] = useState(0);
@@ -94,8 +93,6 @@ function IsiMenu({ namaUser }: { namaUser: string | null }) {
     return Array.from(set);
   }, [daftarMenu]);
 
-  const kategoriTampil = kategoriAktif ? [kategoriAktif] : kategoriList;
-
   if (!memuatToko && !tokoBuka) {
     return (
       <div className="layar-tutup">
@@ -121,24 +118,6 @@ function IsiMenu({ namaUser }: { namaUser: string | null }) {
 
       <TabMenuPesanan />
 
-      <nav className="kategori-tabs">
-        <button
-          className={`kategori-chip ${kategoriAktif === null ? "aktif" : ""}`}
-          onClick={() => setKategoriAktif(null)}
-        >
-          Semua
-        </button>
-        {kategoriList.map((kategori) => (
-          <button
-            key={kategori}
-            className={`kategori-chip ${kategoriAktif === kategori ? "aktif" : ""}`}
-            onClick={() => setKategoriAktif(kategori)}
-          >
-            {kategori}
-          </button>
-        ))}
-      </nav>
-
       {memuat && (
         <Memuat pesan={["Lagi nyusun menu hari ini…", "Ayam lagi digoreng…"]} />
       )}
@@ -151,7 +130,7 @@ function IsiMenu({ namaUser }: { namaUser: string | null }) {
         </div>
       )}
 
-      {kategoriTampil.map((kategori) => (
+      {kategoriList.map((kategori) => (
         <section key={kategori} className="kategori-section">
           <div className="kategori-title">{kategori}</div>
           {daftarMenu
