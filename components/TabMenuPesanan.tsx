@@ -4,10 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 // Tab switcher "Menu" <-> "Pesanan Saya" dengan efek "tab folder" -- tab yang
-// lagi aktif background-nya nyambung sama warna halaman di bawahnya (garis
-// pemisah "terputus" persis di tab yang aktif), jadi keliatan seakan-akan isi
-// di bawah itu memang "punya" tab yang lagi ditekan. Tab yang gak aktif
-// keliatan seperti kotak terpisah/tertutup.
+// lagi aktif tampil PUTIH & terangkat (nyambung visual ke kartu-kartu putih
+// di bawahnya, dikasih bayangan halus biar kesan "naik"), sedangkan tab yang
+// gak aktif tampil pudar transparan (blend ke background, kesannya
+// "tenggelam"/gak dipilih). Garis pemisah di bawahnya "terputus" persis di
+// tab yang aktif, jadi keliatan seakan-akan isi di bawah itu memang
+// "punya" tab yang lagi ditekan.
 export default function TabMenuPesanan() {
   const pathname = usePathname();
   const aktif = pathname?.startsWith("/pesanan") ? "pesanan" : "menu";
@@ -32,15 +34,16 @@ export default function TabMenuPesanan() {
                 textDecoration: "none",
                 padding: "10px 12px",
                 fontSize: 13.5,
-                fontWeight: 700,
+                fontWeight: isAktif ? 800 : 600,
                 borderRadius: "var(--radius-md) var(--radius-md) 0 0",
-                border: "1.5px solid var(--color-line)",
-                borderBottomColor: isAktif ? "var(--color-bg)" : "var(--color-line)",
-                background: isAktif ? "var(--color-bg)" : "var(--color-card)",
-                color: isAktif ? "var(--color-ink)" : "var(--color-ink-soft)",
+                border: `1.5px solid ${isAktif ? "var(--color-accent)" : "var(--color-line)"}`,
+                borderBottomColor: isAktif ? "var(--color-card)" : "var(--color-line)",
+                background: isAktif ? "var(--color-card)" : "transparent",
+                color: isAktif ? "var(--color-accent)" : "var(--color-ink-soft)",
                 marginBottom: -1.5,
                 position: "relative",
                 zIndex: isAktif ? 2 : 1,
+                boxShadow: isAktif ? "0 -3px 10px rgba(23, 19, 16, 0.1)" : "none",
               }}
             >
               {tab.label}
